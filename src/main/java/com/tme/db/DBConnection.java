@@ -15,7 +15,7 @@ public class DBConnection {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			
 			//step:2- create a connection
-			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/teachmateweb","root","mysqldatabase");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/teachmateweb","usuario","password");
 			
 		} catch (Exception e) {
 			e.printStackTrace();
