@@ -89,6 +89,7 @@ En PowerShell encerrar el hash entre comillas simples por los signos `$`.
 | `PORT` | `10000` por defecto; el contenedor respeta el puerto configurado. |
 | `SESSION_COOKIE_SECURE` | `true` en Render; `false` en HTTP local. |
 | `TRUST_RENDER_PROXY` | `true` en el servicio público de Render; `false` en acceso local directo. |
+| `DB_CA_CERT_BASE64` | Certificado CA de Aiven codificado en Base64, en una sola línea. Vacío para MySQL local. |
 
 Ejemplo de URL remota, reemplazando host, puerto y base:
 
@@ -96,8 +97,20 @@ Ejemplo de URL remota, reemplazando host, puerto y base:
 jdbc:mysql://HOST:3306/BASE?sslMode=VERIFY_IDENTITY&connectionTimeZone=UTC&connectTimeout=3000&socketTimeout=3000
 ```
 
-Configurar los certificados según el proveedor si Java no reconoce su CA, sin
-desactivar la validación TLS. Introducir los secretos en Render y no guardarlos
+Para Aiven, convertir el certificado descargado desde PowerShell (sustituir la ruta):
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\ruta\ca.pem'))
+```
+
+Copiar el resultado completo a `DB_CA_CERT_BASE64` en Render. El arranque crea un
+almacén de confianza temporal para Java a partir de ese certificado, sin modificar
+el repositorio ni incluirlo en la imagen. Su contraseña fija protege solo certificados
+públicos; no contiene claves privadas ni la contraseña de MySQL. Usar siempre
+`sslMode=VERIFY_IDENTITY` en la URL de Aiven para comprobar también el hostname.
+
+Configurar los certificados según el proveedor sin desactivar la validación TLS.
+Introducir los secretos en Render y no guardarlos
 en Git. `.env.example` es una referencia; Tomcat no carga `.env` automáticamente.
 
 ## Docker y Render
@@ -119,7 +132,7 @@ Para publicar:
 2. Preparar MySQL remoto y los accesos descritos arriba.
 3. Crear en Render un **Blueprint** conectado al repositorio y la rama deseada.
 4. Revisar el plan y la región. `render.yaml` propone Free para una demostración.
-5. Completar las cinco variables solicitadas y crear el servicio. Render construye
+5. Completar las seis variables solicitadas y crear el servicio. Render construye
    el Dockerfile; el arranque está incluido y no requiere otro Start Command.
 6. Esperar que `/health` responda 200 y comprobar los flujos de los tres roles.
 

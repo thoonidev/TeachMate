@@ -45,8 +45,22 @@ case "${TRUST_RENDER_PROXY:-false}" in
     *) fail 'TRUST_RENDER_PROXY debe ser true o false.' ;;
 esac
 
+# The CA is supplied at runtime, never copied into the image or repository.
+# This truststore contains only public certificates; its fixed password is not a credential.
+tls_options=
+if [ -n "${DB_CA_CERT_BASE64:-}" ]; then
+    umask 077
+    tls_dir=$(mktemp -d /tmp/teachmate-tls.XXXXXX)
+    printf '%s' "$DB_CA_CERT_BASE64" | base64 --decode > "$tls_dir/ca.pem" \
+        || fail 'DB_CA_CERT_BASE64 no es un certificado codificado válido.'
+    keytool -importcert -noprompt -alias mysql-ca -file "$tls_dir/ca.pem" \
+        -keystore "$tls_dir/truststore.p12" -storetype PKCS12 -storepass changeit \
+        > /dev/null 2>&1 || fail 'No se pudo importar el certificado CA de MySQL.'
+    tls_options="-Djavax.net.ssl.trustStore=$tls_dir/truststore.p12 -Djavax.net.ssl.trustStoreType=PKCS12 -Djavax.net.ssl.trustStorePassword=changeit"
+fi
+
 # Values appended here are validated numbers or fixed strings, never credentials.
-CATALINA_OPTS="${CATALINA_OPTS:-} -Dhttp.port=$PORT -Dproxy.remoteHeader=$remote_header -Dproxy.protocolHeader=$protocol_header"
+CATALINA_OPTS="${CATALINA_OPTS:-} $tls_options -Dhttp.port=$PORT -Dproxy.remoteHeader=$remote_header -Dproxy.protocolHeader=$protocol_header"
 export CATALINA_OPTS
 printf 'Iniciando TeachMate en el puerto %s.\n' "$PORT"
 exec "${CATALINA_HOME:-/usr/local/tomcat}/bin/catalina.sh" run
