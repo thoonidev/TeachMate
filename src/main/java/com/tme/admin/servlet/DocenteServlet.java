@@ -50,7 +50,7 @@ public class DocenteServlet extends HttpServlet{
 			}
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			req.getServletContext().log("No se pudo completar la operación solicitada."); resp.sendError(500);
 		}
 		
 	}

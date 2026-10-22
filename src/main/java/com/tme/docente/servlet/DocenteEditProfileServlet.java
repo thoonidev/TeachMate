@@ -31,7 +31,7 @@ public class DocenteEditProfileServlet extends HttpServlet {
 			//String clave = req.getParameter("clave");
 
 			
-			int id = Integer.parseInt(req.getParameter("docenteId"));
+			int id = ((com.tme.modal.Docente) req.getSession(false).getAttribute("docenteObj")).getId();
 
 			Docente docente = new Docente(id, nombre, fnacim, calificacion, especialidad, email, telefono, "");
 
@@ -53,7 +53,7 @@ public class DocenteEditProfileServlet extends HttpServlet {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			req.getServletContext().log("No se pudo completar la operación solicitada."); resp.sendError(500);
 		}
 
 	}

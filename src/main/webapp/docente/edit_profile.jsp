@@ -54,11 +54,12 @@
 						<!-- for message -->
 						<!-- success message -->
 						<c:if test="${not empty successMsg}">
-							<script>
+							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'success',
 									title : 'Éxito',
-									text : '${successMsg}',
+									text : document.getElementById("flash-successMsg").textContent,
 								});
 							</script>
 							<c:remove var="successMsg" scope="session" />
@@ -66,11 +67,12 @@
 
 						<!-- for error msg -->
 						<c:if test="${not empty errorMsg}">
-							<script>
+							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'error',
 									title : 'Error',
-									text : '${errorMsg}',
+									text : document.getElementById("flash-errorMsg").textContent,
 								});
 							</script>
 							<c:remove var="errorMsg" scope="session" />
@@ -80,16 +82,17 @@
 						<!-- formulario de cambio de contraseña del docente -->
 
 						<form action="../docenteChangePassword" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 							<div class="mb-3">
 								<label class="form-label">Ingrese nueva clave</label> <input
-									name="newPassword" type="password"
+									name="newPassword" maxlength="128" minlength="12" autocomplete="new-password" type="password"
 									placeholder="Ingrese nueva clave" class="form-control"
 									required="required">
 
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Ingrese la contraseña anterior</label> <input
-									name="oldPassword" type="password"
+									name="oldPassword" maxlength="128" autocomplete="current-password" type="password"
 									placeholder="Ingrese la contraseña anterior" class="form-control" required>
 							</div>
 							<input type="hidden" value="${docenteObj.id}" name="docenteId">
@@ -114,25 +117,27 @@
 						<!-- for message -->
 						<!-- success message -->
 						<c:if test="${not empty successMsgForD}">
-							<script>
-       							 Swal.fire({
-            						icon: 'success',
-            						title: 'Éxito',
-            						text: '${successMsgForD}',
-       								 });
-    						</script>
+							<span hidden id="flash-successMsgForD"><c:out value="${successMsgForD}" /></span>
+<script>
+							 Swal.fire({
+						icon: 'success',
+						title: 'Éxito',
+						text: document.getElementById("flash-successMsgForD").textContent,
+								 });
+						</script>
 							<c:remove var="successMsgForD" scope="session" />
 						</c:if>
 						
 						<!-- for error msg -->
 						<c:if test="${not empty errorMsgForD}">
-							<script>
-        						Swal.fire({
+							<span hidden id="flash-errorMsgForD"><c:out value="${errorMsgForD}" /></span>
+<script>
+						Swal.fire({
 					            icon: 'error',
 					            title: 'Error',
-					            text: '${errorMsgForD}',
-       							 });
-   							 </script>
+					            text: document.getElementById("flash-errorMsgForD").textContent,
+							 });
+							 </script>
 							<c:remove var="errorMsgForD" scope="session" />
 						</c:if>
 						<!-- end of message -->
@@ -143,29 +148,30 @@
 
 						<!-- boostrap form -->
 						<form action="../docenteEditProfile" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 							<div class="mb-3">
 								<label class="form-label">Nombre completo</label> <input
 									name="nombre" type="text" placeholder="Ingrese nombre completo"
-									class="form-control" value="${docenteObj.nombre}">
+									class="form-control" value="<c:out value="${docenteObj.nombre}" />">
 
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Fecha de nacimiento</label> <input
 									name="fnacim" type="date" placeholder="Ingrese fnacim"
-									class="form-control" value="${docenteObj.fnacim}">
+									class="form-control" value="<c:out value="${docenteObj.fnacim}" />">
 
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Calificación</label> <input
 									name="calificacion" type="text"
 									placeholder="Ingrese calificacion" class="form-control"
-									value="${docenteObj.calificacion}">
+									value="<c:out value="${docenteObj.calificacion}" />">
 							</div>
 
 							<div class="mb-3">
 								<label class="form-label">Especialidad</label> <select
 									class="form-control" name="especialidad">
-									<option>${ docenteObj.especialidad }</option>
+									<option><c:out value="${docenteObj.especialidad}" /></option>
 
 									<%
 									EspecialidadDAO espDAO = new EspecialidadDAO(DBConnection.getConn());
@@ -173,7 +179,7 @@
 										for (Especialidad esp : espList) {
 										%>
 									<option>
-										<%=esp.getEspecialidadNombre()%>
+										<%=com.tme.security.Html.escape(esp.getEspecialidadNombre())%>
 									</option>
 									<%
 										}
@@ -185,13 +191,13 @@
 							<div class="mb-3">
 								<label class="form-label">Email</label> <input
 									name="email" type="email" placeholder="Ingrese correo electronico"
-									class="form-control" readonly value="${docenteObj.email}">
+									class="form-control" readonly value="<c:out value="${docenteObj.email}" />">
 
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Telefono</label> <input name="telefono"
 									type="text" placeholder="Ingrese telefono"
-									class="form-control" value="${docenteObj.telefono}">
+									class="form-control" value="<c:out value="${docenteObj.telefono}" />">
 
 							</div>
 

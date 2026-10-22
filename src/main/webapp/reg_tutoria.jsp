@@ -82,11 +82,12 @@
 						<!-- message print -->
 						<!-- for success msg -->
 						<c:if test="${not empty successMsg}">
-							<script>
+							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'success',
 									title : 'Éxito',
-									text : '${successMsg}',
+									text : document.getElementById("flash-successMsg").textContent,
 								});
 							</script>
 							<c:remove var="successMsg" scope="session" />
@@ -94,11 +95,12 @@
 
 						<!-- for error msg -->
 						<c:if test="${not empty errorMsg}">
-							<script>
+							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'error',
 									title : 'Error',
-									text : '${errorMsg}',
+									text : document.getElementById("flash-errorMsg").textContent,
 								});
 							</script>
 							<c:remove var="errorMsg" scope="session" />
@@ -108,6 +110,7 @@
 
 						<!-- boostrap form -->
 						<form class="row g-3" action="addTutoria" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 							
 							<!-- tomar ID de usuario en el campo oculto -->
 							<input type="hidden" name="userId" value="${ userObj.id }">
@@ -167,7 +170,7 @@
 									
 									{%>
 									<!-- tomamos el id docente de la tabla docentes -->
-									<option value="<%= d.getId() %>"> <%= d.getNombre()%> (<%= d.getEspecialidad() %>) </option>
+									<option value="<%=com.tme.security.Html.escape(d.getId())%>"> <%=com.tme.security.Html.escape(d.getNombre())%> (<%=com.tme.security.Html.escape(d.getEspecialidad())%>) </option>
 									
 									<%
 									}

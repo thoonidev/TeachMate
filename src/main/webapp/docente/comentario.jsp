@@ -83,11 +83,12 @@
 						<!-- message print -->
 						<!-- for success msg -->
 						<c:if test="${not empty successMsg}">
-							<script>
+							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'success',
 									title : 'Éxito',
-									text : '${successMsg}',
+									text : document.getElementById("flash-successMsg").textContent,
 								});
 							</script>
 							<c:remove var="successMsg" scope="session" />
@@ -95,11 +96,12 @@
 
 						<!-- for error msg -->
 						<c:if test="${not empty errorMsg}">
-							<script>
+							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'error',
 									title : 'Error',
-									text : '${errorMsg}',
+									text : document.getElementById("flash-errorMsg").textContent,
 								});
 							</script>
 							<c:remove var="errorMsg" scope="session" />
@@ -119,6 +121,7 @@
 						
 						<!-- boostrap form -->
 						<form class="row g-3" action="../updateEstado" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 
 							<!-- tomar ID de usuario en el campo oculto -->
 							<%-- <input type="hidden" name="userId" value="${ userObj.id }"> --%>
@@ -126,26 +129,26 @@
 							<div class="col-md-6">
 								<label class="form-label">Nombre completo</label> <input
 									name="nombre" type="text" placeholder="Ingrese nombre completo"
-									class="form-control" readonly value="<%= tutoria.getNombre()%>">
+									class="form-control" readonly value="<%=com.tme.security.Html.escape(tutoria.getNombre())%>">
 
 							</div>
 
 							<div class="col-md-6">
 								<label class="form-label">Edad</label> <input name="edad"
 									type="number" placeholder="Ingrese su edad" class="form-control"
-									readonly value="<%= tutoria.getEdad()%>">
+									readonly value="<%=com.tme.security.Html.escape(tutoria.getEdad())%>">
 							</div>
 
 							<div class="col-md-6">
 								<label class="form-label">Telefono</label> <input name="telefono"
 									type="number" maxlength="11" placeholder="Ingrese telefono"
-									class="form-control" readonly value="<%= tutoria.getTelefono()%>">
+									class="form-control" readonly value="<%=com.tme.security.Html.escape(tutoria.getTelefono())%>">
 							</div>
 
 							<div class="col-md-6">
 								<label class="form-label">Experiencia</label> <input
 									name="experiencia" type="text" placeholder="Ingrese conocimiento previo"
-									class="form-control" readonly value="<%= tutoria.getExperiencia()%>">
+									class="form-control" readonly value="<%=com.tme.security.Html.escape(tutoria.getExperiencia())%>">
 							</div>
 
 
@@ -157,10 +160,10 @@
 							</div>
 
 							<!-- comentario de la tutoria es / ID del comentario -->
-							<input type="hidden" name="id" value="<%= tutoria.getId()%>" class="form-control">
+							<input type="hidden" name="id" value="<%=com.tme.security.Html.escape(tutoria.getId())%>" class="form-control">
 
 							<!-- docente da un comentario / ID del docente -->
-							<input type="hidden" name="docenteId" value="<%= tutoria.getDocenteId()%>" class="form-control">
+							<input type="hidden" name="docenteId" value="<%=com.tme.security.Html.escape(tutoria.getDocenteId())%>" class="form-control">
 
 
 

@@ -91,13 +91,13 @@
 						<%-- <!-- message print -->
 						<!-- for success msg -->
 						<c:if test="${not empty successMsg }">
-							<p class="text-center text-success fs-5">${successMsg}</p>
+							<p class="text-center text-success fs-5"><c:out value="${successMsg}" /></p>
 							<c:remove var="successMsg" scope="session" />
 						</c:if>
 
 						<!-- for error msg -->
 						<c:if test="${not empty errorMsg }">
-							<p class="text-center text-danger fs-5">${errorMsg}</p>
+							<p class="text-center text-danger fs-5"><c:out value="${errorMsg}" /></p>
 							<c:remove var="errorMsg" scope="session" />
 						</c:if>
 						<!-- End of message print --> --%>
@@ -133,23 +133,23 @@
 
 
 								<tr>
-									<%-- <th scope="row"><%= tuttList.getId() %></th> --%>
-									<td><%=tuttList.getNombre()%></td>
-									<td><%=tuttList.getGenero()%></td>
-									<td><%=tuttList.getEdad()%></td>
-									<td><%=tuttList.getFtutoria()%></td>
-									<%-- <td><%= tuttList.getEmail()%></td> --%>
-									<td><%=tuttList.getTelefono()%></td>
-									<td><%=tuttList.getExperiencia()%></td>
-									<td><%=docente.getNombre()%></td>
-									<%-- <td><%= tuttList.getDireccion()%></td> --%>
-									<%-- <td><%= tuttList.getUserId()%></td> --%>
+									<%-- <th scope="row"><%=com.tme.security.Html.escape(tuttList.getId())%></th> --%>
+									<td><%=com.tme.security.Html.escape(tuttList.getNombre())%></td>
+									<td><%=com.tme.security.Html.escape(tuttList.getGenero())%></td>
+									<td><%=com.tme.security.Html.escape(tuttList.getEdad())%></td>
+									<td><%=com.tme.security.Html.escape(tuttList.getFtutoria())%></td>
+									<%-- <td><%=com.tme.security.Html.escape(tuttList.getEmail())%></td> --%>
+									<td><%=com.tme.security.Html.escape(tuttList.getTelefono())%></td>
+									<td><%=com.tme.security.Html.escape(tuttList.getExperiencia())%></td>
+									<td><%=com.tme.security.Html.escape(docente.getNombre())%></td>
+									<%-- <td><%=com.tme.security.Html.escape(tuttList.getDireccion())%></td> --%>
+									<%-- <td><%=com.tme.security.Html.escape(tuttList.getUserId())%></td> --%>
 									<td>
 										<%
 										if ("Pendiente".equals(tuttList.getEstado())) {
 										%> <a href="" class="btn btn-sm btn-danger">Pendiente</a> <%
  } else {
- %> <%=tuttList.getEstado()%> <%
+ %> <%=com.tme.security.Html.escape(tuttList.getEstado())%> <%
  }
  %>
 									</td>

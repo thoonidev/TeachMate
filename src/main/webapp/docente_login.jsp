@@ -43,11 +43,12 @@
 						<!-- message print -->
 						<!-- for success msg -->
 						<c:if test="${not empty successMsg}">
-							<script>
+							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'success',
 									title : 'Éxito',
-									text : '${successMsg}',
+									text : document.getElementById("flash-successMsg").textContent,
 								});
 							</script>
 							<c:remove var="successMsg" scope="session" />
@@ -55,11 +56,12 @@
 
 						<!-- for error msg -->
 						<c:if test="${not empty errorMsg}">
-							<script>
+							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'error',
 									title : 'Error',
-									text : '${errorMsg}',
+									text : document.getElementById("flash-errorMsg").textContent,
 								});
 							</script>
 							<c:remove var="errorMsg" scope="session" />
@@ -68,6 +70,7 @@
 
 						<!-- boostrap form -->
 						<form action="docenteLogin" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 							<div class="mb-3">
 								<label class="form-label">Email</label> <input
 									name="email" type="email" placeholder="Ingrese correo electronico"
@@ -77,7 +80,7 @@
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Clave</label> <input
-									name="clave" type="password" placeholder="Ingrese clave"
+									name="clave" maxlength="128" autocomplete="current-password" type="password" placeholder="Ingrese clave"
 									class="form-control">
 							</div>
 

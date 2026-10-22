@@ -13,12 +13,11 @@ import javax.servlet.http.HttpSession;
 public class UserLogoutServlet extends HttpServlet {
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
-		HttpSession session = req.getSession();
-		session.removeAttribute("userObj");
-		session.setAttribute("successMsg", "Cerró sesión correctamente");
-		resp.sendRedirect("alumno_login.jsp");
+		HttpSession session = req.getSession(false);
+        if (session != null) session.invalidate();
+        resp.sendRedirect("alumno_login.jsp");
 		
 	}
 

@@ -21,7 +21,7 @@ public class UpdateEstado extends HttpServlet{
 		try {
 			
 		 int 	id = Integer.parseInt(req.getParameter("id"));
-		 int 	docenteId = Integer.parseInt(req.getParameter("docenteId"));
+		 int docenteId = ((com.tme.modal.Docente) req.getSession(false).getAttribute("docenteObj")).getId();
 		 String comentario = req.getParameter("comentario");
 		 
 		 TutoriaDAO tutDAO = new TutoriaDAO(DBConnection.getConn());
@@ -43,7 +43,7 @@ public class UpdateEstado extends HttpServlet{
 		 
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			req.getServletContext().log("No se pudo completar la operación solicitada."); resp.sendError(500);
 		}
 	}
 

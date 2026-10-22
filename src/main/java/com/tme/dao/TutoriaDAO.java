@@ -39,12 +39,10 @@ public class TutoriaDAO {
 			pstmt.setString(10, tutoria.getDireccion());
 			pstmt.setString(11, tutoria.getEstado());
 
-			pstmt.executeUpdate();
-
-			f = true;
+			f = pstmt.executeUpdate() == 1;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return f;
@@ -87,7 +85,7 @@ public class TutoriaDAO {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return tutList;
@@ -131,7 +129,7 @@ public class TutoriaDAO {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return tutList;
@@ -172,7 +170,7 @@ public class TutoriaDAO {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return tutoria;
@@ -192,12 +190,10 @@ public class TutoriaDAO {
 			pstmt.setInt(2, tuttId);
 			pstmt.setInt(3, docId);
 
-			pstmt.executeUpdate();
-
-			f = true;
+			f = pstmt.executeUpdate() == 1;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return f;
@@ -236,7 +232,7 @@ public class TutoriaDAO {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return tutList;

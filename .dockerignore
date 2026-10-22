@@ -1,0 +1,10 @@
+*
+!pom.xml
+!src/
+!src/**
+!database/
+!database/schema.sql
+!deploy/
+!deploy/start.sh
+!deploy/tomcat/
+!deploy/tomcat/server.xml

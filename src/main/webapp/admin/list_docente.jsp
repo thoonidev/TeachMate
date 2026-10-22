@@ -47,11 +47,12 @@
 						<!-- message print -->
 						<!-- for success msg -->
 						<c:if test="${not empty successMsg}">
-							<script>
+							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'success',
 									title : 'Éxito',
-									text : '${successMsg}',
+									text : document.getElementById("flash-successMsg").textContent,
 								});
 							</script>
 							<c:remove var="successMsg" scope="session" />
@@ -59,11 +60,12 @@
 
 
 						<c:if test="${not empty errorMsg}">
-							<script>
+							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'error',
 									title : 'Error',
-									text : '${errorMsg}',
+									text : document.getElementById("flash-errorMsg").textContent,
 								});
 							</script>
 							<c:remove var="errorMsg" scope="session" />
@@ -93,19 +95,19 @@
 								for (Docente docenteLst : listOfDoc) {
 								%>
 								<tr>
-									<%-- <th scope="row"><%= docenteLst.getId()%></th> --%>
-									<th><%=docenteLst.getNombre()%></th>
-									<td><%=docenteLst.getFnacim()%></td>
-									<td><%=docenteLst.getCalificacion()%></td>
-									<td><%=docenteLst.getEspecialidad()%></td>
-									<td><%=docenteLst.getEmail()%></td>
-									<td><%=docenteLst.getTelefono()%></td>
+									<%-- <th scope="row"><%=com.tme.security.Html.escape(docenteLst.getId())%></th> --%>
+									<th><%=com.tme.security.Html.escape(docenteLst.getNombre())%></th>
+									<td><%=com.tme.security.Html.escape(docenteLst.getFnacim())%></td>
+									<td><%=com.tme.security.Html.escape(docenteLst.getCalificacion())%></td>
+									<td><%=com.tme.security.Html.escape(docenteLst.getEspecialidad())%></td>
+									<td><%=com.tme.security.Html.escape(docenteLst.getEmail())%></td>
+									<td><%=com.tme.security.Html.escape(docenteLst.getTelefono())%></td>
 
 
 									<td><a class="btn btn-sm btn-primary"
-										href="edit_docente.jsp?id=<%=docenteLst.getId()%>">Editar</a></td>
-									<td><a class="btn btn-sm btn-danger"
-										href="../deleteDocente?id=<%=docenteLst.getId()%>">Eliminar</a></td>
+										href="edit_docente.jsp?id=<%=com.tme.security.Html.escape(docenteLst.getId())%>">Editar</a></td>
+									<td><form action="../deleteDocente" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"><input type="hidden" name="id" value="<%=com.tme.security.Html.escape(docenteLst.getId())%>"><button type="submit" class="btn btn-sm btn-danger">Eliminar</button></form></td>
 
 
 

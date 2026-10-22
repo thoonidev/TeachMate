@@ -57,7 +57,7 @@ public class UserRegisterServlet extends HttpServlet {
 				resp.sendRedirect("reg_alumno.jsp");
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			req.getServletContext().log("No se pudo completar la operación solicitada."); resp.sendError(500);
 		}
 	}
 

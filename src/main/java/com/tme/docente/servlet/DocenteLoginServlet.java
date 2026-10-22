@@ -37,7 +37,7 @@ public class DocenteLoginServlet extends HttpServlet {
 		if (docente != null) {
 			//Significa que el docente es válido o existe
 			//luego almacena el objeto docente registrado particular en la sesión
-			session.setAttribute("docenteObj", docente);
+			session = com.tme.security.Sessions.login(req, "docenteObj", docente);
 			// redirigir la página de índice del docente particular que es la carpeta del docente residente.
 			resp.sendRedirect("docente/index.jsp");//índice de docente significa panel docente.
 		} else {

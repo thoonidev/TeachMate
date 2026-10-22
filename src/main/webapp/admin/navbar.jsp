@@ -34,7 +34,8 @@
 					<i class="fa fa-universal-access"></i> Admin
 				</button>
 				<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-					<li><a class="dropdown-item" href="../adminLogout">Cerrar Sesión</a></li>
+					<li><form action="../adminLogout" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"><button type="submit" class="dropdown-item">Cerrar sesiÃ³n</button></form></li>
 
 				</ul>
 			</div>

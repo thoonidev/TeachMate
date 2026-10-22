@@ -18,7 +18,7 @@ public class DocenteChangePassword extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-		int docenteId = Integer.parseInt(req.getParameter("docenteId"));
+		int docenteId = ((com.tme.modal.Docente) req.getSession(false).getAttribute("docenteObj")).getId();
 		String newPassword = req.getParameter("newPassword");
 		String oldPassword = req.getParameter("oldPassword");
 
@@ -30,7 +30,8 @@ public class DocenteChangePassword extends HttpServlet {
 
 			if (docenteDAO.changePassword(docenteId, newPassword)) {
 				
-				session.setAttribute("successMsg", "Cambio de contraseña exitoso");
+				session = com.tme.security.Sessions.login(req, "docenteObj", session.getAttribute("docenteObj"));
+session.setAttribute("successMsg", "Cambio de contraseña exitoso");
 				resp.sendRedirect("docente/edit_profile.jsp");
 
 			} else {

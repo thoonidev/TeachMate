@@ -16,7 +16,7 @@ import com.tme.db.DBConnection;
 public class DeleteDocenteServlet extends HttpServlet {
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
 		//obtener id (que viene como valor de cadena) y convertirlo a int	
 		int id = Integer.parseInt(req.getParameter("id"));

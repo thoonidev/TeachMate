@@ -18,7 +18,7 @@ public class ChangePasswordServlet extends HttpServlet{
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
-		int userId = Integer.parseInt(req.getParameter("userId"));
+		int userId = ((com.tme.modal.User) req.getSession(false).getAttribute("userObj")).getId();
 		String oldPassword = req.getParameter("oldPassword");
 		String newPassword = req.getParameter("newPassword");
 		
@@ -32,7 +32,8 @@ public class ChangePasswordServlet extends HttpServlet{
 			
 			if(uDAO.changePassword(userId, newPassword)) {
 				
-				session.setAttribute("successMsg", "Cambio de contraseña exitoso");
+				session = com.tme.security.Sessions.login(req, "userObj", session.getAttribute("userObj"));
+session.setAttribute("successMsg", "Cambio de contraseña exitoso");
 				resp.sendRedirect("change_password.jsp");
 				
 			}else {

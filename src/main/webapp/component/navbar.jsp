@@ -22,8 +22,8 @@
 			<!-- original ul <ul class="navbar-nav me-auto mb-2 mb-lg-0"> -->
 			<ul class="navbar-nav ms-auto mb-2 mb-lg-0">
 
-				<!-- Si el usuario no ha iniciado sesión, podrá ver los siguientes elementos -->
-				<!-- para crear una barra de navegación dinámica -->
+				<!-- Si el usuario no ha iniciado sesiï¿½n, podrï¿½ ver los siguientes elementos -->
+				<!-- para crear una barra de navegaciï¿½n dinï¿½mica -->
 
 				<c:if test="${empty userObj}">
 
@@ -43,15 +43,15 @@
 
 				</c:if>
 
-				<!-- finalizar si el usuario no ha iniciado sesión, entonces el usuario podrá ver los siguientes elementos -->
+				<!-- finalizar si el usuario no ha iniciado sesiï¿½n, entonces el usuario podrï¿½ ver los siguientes elementos -->
 
 
 
-				<!-- Si el usuario ha iniciado sesión, podrá ver los siguientes elementos. -->
-				<!-- para crear una barra de navegación dinámica -->
+				<!-- Si el usuario ha iniciado sesiï¿½n, podrï¿½ ver los siguientes elementos. -->
+				<!-- para crear una barra de navegaciï¿½n dinï¿½mica -->
 
 				<c:if test="${not empty userObj }">
-					<!-- Significa que el usuario está conectado -->
+					<!-- Significa que el usuario estï¿½ conectado -->
 					<li class="nav-item"><a class="nav-link active"
 						aria-current="page" href="reg_tutoria.jsp"><i
 							class="fa fa-book fa-1x"></i> TUTORIA</a></li>
@@ -66,11 +66,12 @@
 						<button class="btn btn-outline-light dropdown-toggle"
 							type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
 							aria-expanded="false">
-							<i class="fa-solid fa-circle-user"></i> ${userObj.nombre}
+							<i class="fa-solid fa-circle-user"></i> <c:out value="${userObj.nombre}" />
 						</button>
 						<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
 							<li><a class="dropdown-item" href="change_password.jsp">Cambiar Clave</a></li>
-							<li><a class="dropdown-item" href="userLogout">Cerrar Sesión</a></li>
+							<li><form action="userLogout" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"><button type="submit" class="dropdown-item">Cerrar sesiÃ³n</button></form></li>
 
 						</ul>
 					</div>
@@ -79,7 +80,7 @@
 					<%-- <li class="nav-item dropdown active"><a
 						class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
 						role="button" data-bs-toggle="dropdown" aria-expanded="false">
-							<i class="fa-solid fa-circle-user"></i> ${userObj.nombre}
+							<i class="fa-solid fa-circle-user"></i> <c:out value="${userObj.nombre}" />
 					</a>
 						<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
 							<li><a class="dropdown-item" href="#">Change Password</a></li>
@@ -88,7 +89,7 @@
 						</ul></li> --%>
 
 				</c:if>
-				<!-- final de si el usuario ha iniciado sesión, entonces el usuario puede ver los siguientes elementos -->
+				<!-- final de si el usuario ha iniciado sesiï¿½n, entonces el usuario puede ver los siguientes elementos -->
 
 
 

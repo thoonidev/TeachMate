@@ -47,11 +47,12 @@
 						<!-- for message -->
 						<!-- success message -->
 						<c:if test="${not empty successMsg}">
-							<script>
+							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'success',
 									title : 'Éxito',
-									text : '${successMsg}',
+									text : document.getElementById("flash-successMsg").textContent,
 								});
 							</script>
 							<c:remove var="successMsg" scope="session" />
@@ -59,11 +60,12 @@
 
 						<!-- for error msg -->
 						<c:if test="${not empty errorMsg}">
-							<script>
+							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'error',
 									title : 'Error',
-									text : '${errorMsg}',
+									text : document.getElementById("flash-errorMsg").textContent,
 								});
 							</script>
 							<c:remove var="errorMsg" scope="session" />
@@ -72,15 +74,16 @@
 
 
 						<form action="userChangePassword" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 							<div class="mb-3">
 								<label class="form-label">Ingrese nueva clave</label> <input
-									name="newPassword" type="password" placeholder="Ingrese nueva clave"
+									name="newPassword" maxlength="128" minlength="12" autocomplete="new-password" type="password" placeholder="Ingrese nueva clave"
 									class="form-control" required="required">
 
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Ingrese la contraseña anterior</label> <input
-									name="oldPassword" type="password" placeholder="Ingrese la contraseña anterior"
+									name="oldPassword" maxlength="128" autocomplete="current-password" type="password" placeholder="Ingrese la contraseña anterior"
 									class="form-control" required>
 							</div>
 							<input type="hidden" value="${userObj.id}" name="userId">

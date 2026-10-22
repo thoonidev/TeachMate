@@ -10,6 +10,7 @@ import java.util.List;
 import javax.servlet.http.HttpSession;
 
 import com.tme.modal.Docente;
+import com.tme.security.Passwords;
 
 public class DocenteDAO {
 
@@ -35,14 +36,12 @@ public class DocenteDAO {
 			pstmt.setString(4, docente.getEspecialidad());
 			pstmt.setString(5, docente.getEmail());
 			pstmt.setString(6, docente.getTelefono());
-			pstmt.setString(7, docente.getClave());
+			pstmt.setString(7, Passwords.hash(docente.getClave()));
 
-			pstmt.executeUpdate();
-			// si la consulta se insertó o todo ok
-			f = true;
+			f = pstmt.executeUpdate() == 1;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return f;
@@ -71,12 +70,11 @@ public class DocenteDAO {
 				docente.setEspecialidad(resultSet.getString("especialidad"));
 				docente.setEmail(resultSet.getString("email"));
 				docente.setTelefono(resultSet.getString("telefono"));
-				docente.setClave(resultSet.getString("clave"));
 				docList.add(docente);
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return docList;
@@ -105,12 +103,11 @@ public class DocenteDAO {
 				docente.setEspecialidad(resultSet.getString("especialidad"));
 				docente.setEmail(resultSet.getString("email"));
 				docente.setTelefono(resultSet.getString("telefono"));
-				docente.setClave(resultSet.getString("clave"));
 
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return docente;
@@ -118,34 +115,21 @@ public class DocenteDAO {
 
 	// actualizar docente por id
 	public boolean updateDocente(Docente docente) {
-
-		boolean f = false;
-
-		try {
-
-			String sql = "update docente set nombre=?,fnacim=?,calificacion=?,especialidad=?,email=?,telefono=?,clave=? where id=?";
-
-			PreparedStatement pstmt = this.conn.prepareStatement(sql);
-			pstmt.setString(1, docente.getNombre());
-			pstmt.setString(2, docente.getFnacim());
-			pstmt.setString(3, docente.getCalificacion());
-			pstmt.setString(4, docente.getEspecialidad());
-			pstmt.setString(5, docente.getEmail());
-			pstmt.setString(6, docente.getTelefono());
-			pstmt.setString(7, docente.getClave());
-			// Es necesario configurar id también para la actualización.
-			pstmt.setInt(8, docente.getId());
-
-			pstmt.executeUpdate();
-			// Si la consulta está actualizada o todo ok.
-			f = true;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return f;
-	}
+        boolean reset = docente.getClave() != null && !docente.getClave().isEmpty();
+        String sql = "update docente set nombre=?,fnacim=?,calificacion=?,especialidad=?,email=?,telefono=?"
+                + (reset ? ",clave=?" : "") + " where id=?";
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, docente.getNombre());
+            statement.setString(2, docente.getFnacim());
+            statement.setString(3, docente.getCalificacion());
+            statement.setString(4, docente.getEspecialidad());
+            statement.setString(5, docente.getEmail());
+            statement.setString(6, docente.getTelefono());
+            if (reset) statement.setString(7, Passwords.hash(docente.getClave()));
+            statement.setInt(reset ? 8 : 7, docente.getId());
+            return statement.executeUpdate() == 1;
+        } catch (java.sql.SQLException exception) { throw new IllegalStateException("No se pudo actualizar el docente."); }
+    }
 
 	// eliminar docentes por id
 	public boolean deleteDocenteById(int id) {
@@ -158,68 +142,33 @@ public class DocenteDAO {
 			PreparedStatement pstmt = this.conn.prepareStatement(sql);
 			pstmt.setInt(1, id);
 
-			pstmt.executeUpdate();
-
-			f = true;
+			f = pstmt.executeUpdate() == 1;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return f;
 	}
 
 	// inicio de sesión docente
-	public Docente loginDocente(String email, String clave) {
-
-		Docente docente = null;
-
-		try {
-
-			String sql = "select * from docente where email=? and clave=?";
-			PreparedStatement pstmt = this.conn.prepareStatement(sql);
-
-			pstmt.setString(1, email);
-			pstmt.setString(2, clave);
-
-			ResultSet resultSet = pstmt.executeQuery();
-
-			while (resultSet.next()) {
-				docente = new Docente();
-
-				/*
-				 * docente.setId(resultSet.getInt("id"));
-				 * docente.setNombre(resultSet.getString("nombre"));
-				 * docente.setFnacim(resultSet.getString("fnacim"));
-				 * docente.setCalificacion(resultSet.getString("calificacion"));
-				 * docente.setEspecialidad(resultSet.getString("especialidad"));
-				 * docente.setEmail(resultSet.getString("email"));
-				 * docente.setTelefono(resultSet.getString("telefono"));
-				 * docente.setClave(resultSet.getString("clave"));
-				 */
-				// Nosotros podemos escribir encima del código comentado o
-				// de la siguiente manera [aquí 1 2 3..en serie están el número de índice 
-				// de la columna de la tabla docente.
-		
-
-				docente.setId(resultSet.getInt(1));
-				docente.setNombre(resultSet.getString(2));
-				docente.setFnacim(resultSet.getString(3));
-				docente.setCalificacion(resultSet.getString(4));
-				docente.setEspecialidad(resultSet.getString(5));
-				docente.setEmail(resultSet.getString(6));
-				docente.setTelefono(resultSet.getString(7));
-				docente.setClave(resultSet.getString(8));
-
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return docente;
-
-	}
+	public Docente loginDocente(String email, String password) {
+        try (PreparedStatement statement = conn.prepareStatement("select * from docente where email=?")) {
+            statement.setString(1, email);
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next() || !Passwords.verify(password, result.getString("clave"))) return null;
+                Docente docente = new Docente();
+                docente.setId(result.getInt("id"));
+                docente.setNombre(result.getString("nombre"));
+                docente.setFnacim(result.getString("fnacim"));
+                docente.setCalificacion(result.getString("calificacion"));
+                docente.setEspecialidad(result.getString("especialidad"));
+                docente.setEmail(result.getString("email"));
+                docente.setTelefono(result.getString("telefono"));
+                return docente;
+            }
+        } catch (java.sql.SQLException exception) { throw new IllegalStateException("No se pudo consultar el docente."); }
+    }
 
 	// mostrar el número total de valores dinámicos en el panel de administración
 
@@ -241,7 +190,7 @@ public class DocenteDAO {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return i;
@@ -264,7 +213,7 @@ public class DocenteDAO {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return i;
@@ -288,7 +237,7 @@ public class DocenteDAO {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return i;
@@ -311,7 +260,7 @@ public class DocenteDAO {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return i;
@@ -334,59 +283,30 @@ public class DocenteDAO {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return i;
 	}
 
 	// comprobar la contraseña anterior
-	public boolean checkOldPassword(int docenteId, String oldPassword) {
-
-		boolean f = false;
-
-		try {
-
-			String sql = "select * from docente where id=? and clave=?";
-			PreparedStatement pstmt = this.conn.prepareStatement(sql);
-			pstmt.setInt(1, docenteId);
-			pstmt.setString(2, oldPassword);
-
-			ResultSet resultSet = pstmt.executeQuery();
-
-			while (resultSet.next()) {
-				f = true;
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return f;
-	}
+	public boolean checkOldPassword(int id, String password) {
+        try (PreparedStatement statement = conn.prepareStatement("select clave from docente where id=?")) {
+            statement.setInt(1, id);
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next() && Passwords.verify(password, result.getString("clave"));
+            }
+        } catch (java.sql.SQLException exception) { throw new IllegalStateException("No se pudo consultar el docente."); }
+    }
 
 	// cambiar la contraseña
-	public boolean changePassword(int docenteId, String newPassword) {
-
-		boolean f = false;
-
-		try {
-
-			String sql = "update docente set clave=? where id=?";
-			PreparedStatement pstmt = this.conn.prepareStatement(sql);
-			pstmt.setString(1, newPassword);
-			pstmt.setInt(2, docenteId);
-
-			pstmt.executeUpdate();
-
-			f = true;
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return f;
-	}
+	public boolean changePassword(int id, String password) {
+        try (PreparedStatement statement = conn.prepareStatement("update docente set clave=? where id=?")) {
+            statement.setString(1, Passwords.hash(password));
+            statement.setInt(2, id);
+            return statement.executeUpdate() == 1;
+        } catch (java.sql.SQLException exception) { throw new IllegalStateException("No se pudo actualizar la contraseña."); }
+    }
 
 	// editar perfil de docente en el panel de docentes editar perfil.
 	public boolean editDocenteProfile(Docente docente) {
@@ -409,12 +329,10 @@ public class DocenteDAO {
 			// Es necesario configurar id también para la actualización.
 			pstmt.setInt(7, docente.getId());
 
-			pstmt.executeUpdate();
-			//si la consulta está actualizada o todo está bien.
-			f = true;
+			f = pstmt.executeUpdate() == 1;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 
 		return f;

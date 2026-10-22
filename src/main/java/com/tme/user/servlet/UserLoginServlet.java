@@ -28,7 +28,7 @@ public class UserLoginServlet extends HttpServlet {
 		User user = userDAO.loginUser(email, clave);
 		
 		if (user!=null) {
-			session.setAttribute("userObj",user);
+			session = com.tme.security.Sessions.login(req, "userObj", user);
 			resp.sendRedirect("index.jsp"); 
 		}
 		else {

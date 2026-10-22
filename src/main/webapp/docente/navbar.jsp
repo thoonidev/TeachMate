@@ -36,11 +36,12 @@
 				<button class="btn btn-outline-light dropdown-toggle" type="button"
 					id="dropdownMenuButton1" data-bs-toggle="dropdown"
 					aria-expanded="false">
-					<i class="fa-solid fa-chalkboard-user"></i> ${ docenteObj.nombre}
+					<i class="fa-solid fa-chalkboard-user"></i> <c:out value="${docenteObj.nombre}" />
 				</button>
 				<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
 					<li><a class="dropdown-item" href="edit_profile.jsp">Editar Perfil</a></li>
-					<li><a class="dropdown-item" href="../docenteLogout">Cerrar Sesión</a></li>
+					<li><form action="../docenteLogout" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"><button type="submit" class="dropdown-item">Cerrar sesiÃ³n</button></form></li>
 
 				</ul>
 			</div>

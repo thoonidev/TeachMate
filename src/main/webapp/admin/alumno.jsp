@@ -68,17 +68,17 @@
 						%>
 						
 						<tr>
-							<th><%= tutList.getNombre() %></th>
-							<td><%= tutList.getGenero() %></td>
-							<td><%= tutList.getEdad() %></td>
-							<%-- <td><%= tutList.getNombre() %></td> --%>
-							<td><%= tutList.getFtutoria()%></td>
-							<td><%= tutList.getEmail()%></td>
-							<td><%= tutList.getTelefono()%></td>
-							<td><%= tutList.getExperiencia()%></td>
-							<td><%= tutList.getNombre()%></td>
-							<td><%= tutList.getDireccion()%></td>
-							<td><%= tutList.getEstado()%></td>
+							<th><%=com.tme.security.Html.escape(tutList.getNombre())%></th>
+							<td><%=com.tme.security.Html.escape(tutList.getGenero())%></td>
+							<td><%=com.tme.security.Html.escape(tutList.getEdad())%></td>
+							<%-- <td><%=com.tme.security.Html.escape(tutList.getNombre())%></td> --%>
+							<td><%=com.tme.security.Html.escape(tutList.getFtutoria())%></td>
+							<td><%=com.tme.security.Html.escape(tutList.getEmail())%></td>
+							<td><%=com.tme.security.Html.escape(tutList.getTelefono())%></td>
+							<td><%=com.tme.security.Html.escape(tutList.getExperiencia())%></td>
+							<td><%=com.tme.security.Html.escape(tutList.getNombre())%></td>
+							<td><%=com.tme.security.Html.escape(tutList.getDireccion())%></td>
+							<td><%=com.tme.security.Html.escape(tutList.getEstado())%></td>
 
 						</tr>
 						

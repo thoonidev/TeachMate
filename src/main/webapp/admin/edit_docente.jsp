@@ -45,11 +45,12 @@
 						<!-- message print -->
 						<!-- for success msg -->
 						<c:if test="${not empty successMsg}">
-							<script>
+							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'success',
 									title : 'Éxito',
-									text : '${successMsg}',
+									text : document.getElementById("flash-successMsg").textContent,
 								});
 							</script>
 							<c:remove var="successMsg" scope="session" />
@@ -57,11 +58,12 @@
 
 						<!-- for error msg -->
 						<c:if test="${not empty errorMsg}">
-							<script>
+							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'error',
 									title : 'Error',
-									text : '${errorMsg}',
+									text : document.getElementById("flash-errorMsg").textContent,
 								});
 							</script>
 							<c:remove var="errorMsg" scope="session" />
@@ -83,29 +85,30 @@
 						<!-- Formulario de detalles de los docentes con datos/detalles enviados por el id específico con un campo editable -->
 						
 						<form action="../updateDocente" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 							<div class="mb-3">
 								<label class="form-label">Nombre completo</label> <input
 									name="nombre" type="text" placeholder="Ingrese nombre completo"
-									class="form-control" value="<%=docente.getNombre()%>">
+									class="form-control" value="<%=com.tme.security.Html.escape(docente.getNombre())%>">
 
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Fecha de nacimiento</label> <input
 									name="fnacim" type="date" placeholder="Ingrese fnacim"
-									class="form-control" value="<%=docente.getFnacim()%>">
+									class="form-control" value="<%=com.tme.security.Html.escape(docente.getFnacim())%>">
 
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Calificación</label> <input
 									name="calificacion" type="text"
 									placeholder="Ingrese calificacion" class="form-control"
-									value="<%=docente.getCalificacion()%>">
+									value="<%=com.tme.security.Html.escape(docente.getCalificacion())%>">
 							</div>
 
 							<div class="mb-3">
 								<label class="form-label">Especialidad</label> <select
 									class="form-control" name="especialidad">
-									<option><%=docente.getEspecialidad()%></option>
+									<option><%=com.tme.security.Html.escape(docente.getEspecialidad())%></option>
 
 									<%
 									EspecialidadDAO espDAO = new EspecialidadDAO(DBConnection.getConn());
@@ -113,7 +116,7 @@
 									for (Especialidad esp : espList) {
 									%>
 									<option>
-										<%=esp.getEspecialidadNombre()%>
+										<%=com.tme.security.Html.escape(esp.getEspecialidadNombre())%>
 									</option>
 									<%
 									}
@@ -125,25 +128,25 @@
 							<div class="mb-3">
 								<label class="form-label">Email</label> <input
 									name="email" type="email" placeholder="Ingrese correo electronico"
-									class="form-control" value="<%=docente.getEmail()%>">
+									class="form-control" value="<%=com.tme.security.Html.escape(docente.getEmail())%>">
 
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Telefono</label> <input name="telefono"
 									type="text" placeholder="Ingrese telefono"
-									class="form-control" value="<%=docente.getTelefono()%>">
+									class="form-control" value="<%=com.tme.security.Html.escape(docente.getTelefono())%>">
 
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Clave</label> <input
-									name="clave" type="text" placeholder="Ingrese clave"
-									class="form-control" value="<%=docente.getClave()%>">
+									name="clave" maxlength="128" minlength="12" autocomplete="new-password" type="password" placeholder="Dejar vacío para conservar la contraseña"
+									class="form-control" value="">
 							</div>
 							
 							<!-- para actualizar los datos id usuario se utilizó la identificación "oculta -->
 							<div class="mb-3">
 								<input name="id" type="hidden" class="form-control"
-									value="<%=docente.getId()%>">
+									value="<%=com.tme.security.Html.escape(docente.getId())%>">
 							</div>
 
 							<button type="submit" class="btn btn-dark text-white col-md-12">Actualizar</button>

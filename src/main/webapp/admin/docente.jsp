@@ -45,11 +45,12 @@
 						<!-- message print -->
 						<!-- for success msg -->
 						<c:if test="${not empty successMsg}">
-							<script>
+							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'success',
 									title : 'Éxito',
-									text : '${successMsg}',
+									text : document.getElementById("flash-successMsg").textContent,
 								});
 							</script>
 							<c:remove var="successMsg" scope="session" />
@@ -57,11 +58,12 @@
 
 						<!-- for error msg -->
 						<c:if test="${not empty errorMsg}">
-							<script>
+							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'error',
 									title : 'Error',
-									text : '${errorMsg}',
+									text : document.getElementById("flash-errorMsg").textContent,
 								});
 							</script>
 							<c:remove var="errorMsg" scope="session" />
@@ -70,6 +72,7 @@
 
 						<!-- boostrap form -->
 						<form action="../addDocente" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 							<div class="mb-3">
 								<label class="form-label">Nombre completo</label> <input
 									name="nombre" type="text" placeholder="Ingrese nombre completo"
@@ -99,7 +102,7 @@
 									for (Especialidad esp : espList) {
 									%>
 									<option>
-										<%=esp.getEspecialidadNombre()%>
+										<%=com.tme.security.Html.escape(esp.getEspecialidadNombre())%>
 									</option>
 									<%
 									}
@@ -122,7 +125,7 @@
 							</div>
 							<div class="mb-3">
 								<label class="form-label">Clave</label> <input
-									name="clave" type="password" placeholder="Ingrese clave"
+									name="clave" maxlength="128" minlength="12" autocomplete="new-password" type="password" placeholder="Ingrese clave"
 									class="form-control">
 							</div>
 

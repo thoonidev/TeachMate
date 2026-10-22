@@ -28,14 +28,12 @@ public class EspecialidadDAO {
 			
 			pstmt.setString(1, es);
 			
-			pstmt.executeUpdate();
-			
-			f = true;
+			f = pstmt.executeUpdate() == 1;
 			
 			
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 		
 		
@@ -72,7 +70,7 @@ public class EspecialidadDAO {
 			
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("No se pudo completar la operación de base de datos.");
 		}
 		
 		

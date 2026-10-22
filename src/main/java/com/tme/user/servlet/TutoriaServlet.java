@@ -19,7 +19,7 @@ public class TutoriaServlet extends HttpServlet{
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
-	int userId	= Integer.parseInt(req.getParameter("userId"));
+	int userId = ((com.tme.modal.User) req.getSession(false).getAttribute("userObj")).getId();
 	String nombre = req.getParameter("nombre");
 	String genero = req.getParameter("genero");
 	String edad = req.getParameter("edad");

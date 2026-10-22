@@ -48,11 +48,12 @@
 		<!-- message print -->
 		<!-- for success msg -->
 		<c:if test="${not empty successMsg}">
-							<script>
+							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'success',
 									title : 'Éxito',
-									text : '${successMsg}',
+									text : document.getElementById("flash-successMsg").textContent,
 								});
 							</script>
 			<c:remove var="successMsg" scope="session" />
@@ -60,11 +61,12 @@
 
 		<!-- for error msg -->
 		<c:if test="${not empty errorMsg}">
-							<script>
+							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'error',
 									title : 'Error',
-									text : '${errorMsg}',
+									text : document.getElementById("flash-errorMsg").textContent,
 								});
 							</script>
 			<c:remove var="errorMsg" scope="session" />
@@ -87,7 +89,7 @@
 					<div class="card-body text-center text-dark">
 						<i class="fa-solid fa-chalkboard-user fa-3x"></i><br>
 						<p class="fs-4 text-center">
-							Profesor <br><%= totalNumberOfDocente %>
+							Profesor <br><%=com.tme.security.Html.escape(totalNumberOfDocente)%>
 
 						</p>
 					</div>
@@ -99,7 +101,7 @@
 					<div class="card-body text-center text-dark">
 						<i class="fas fa-user-circle fa-3x"></i><br>
 						<p class="fs-4 text-center">
-							Alumno <br><%= totalNumberOfUser %>
+							Alumno <br><%=com.tme.security.Html.escape(totalNumberOfUser)%>
 						</p>
 					</div>
 				</div>
@@ -110,7 +112,7 @@
 					<div class="card-body text-center text-dark">
 						<i class="fa-solid fa-calendar-check fa-3x"></i><br>
 						<p class="fs-4 text-center">
-							Tutoria total <br><%= totalNumberOfTutoria %>
+							Tutoria total <br><%=com.tme.security.Html.escape(totalNumberOfTutoria)%>
 						</p>
 					</div>
 				</div>
@@ -122,7 +124,7 @@
 					<div class="card-body text-center text-dark">
 						<i class="fa-solid fa-book fa-3x"></i><br>
 						<p class="fs-4 text-center">
-							Especialidad <br><%= totalNumberOfEspecialidad %>
+							Especialidad <br><%=com.tme.security.Html.escape(totalNumberOfEspecialidad)%>
 						</p>
 					</div>
 				</div>
@@ -153,6 +155,7 @@
 				<div class="modal-body">
 
 					<form action="../addEspecialidad" method="post">
+<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 
 						<div class="form-group">
 							<label class="form-label">Ingrese nombre de la especialidad</label> <input

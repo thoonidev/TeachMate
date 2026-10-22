@@ -69,7 +69,7 @@
 					<div class="card-body text-center text-primary">
 						<i class="fa-solid fa-chalkboard-user fa-3x"></i><br>
 						<p class="fs-4 text-center">
-							Profesor <br><%= totalNumberOfDocente %>
+							Profesor <br><%=com.tme.security.Html.escape(totalNumberOfDocente)%>
 						</p>
 					</div>
 				</div>
@@ -81,7 +81,7 @@
 					<div class="card-body text-center text-primary">
 						<i class="fa-solid fa-calendar-check fa-3x"></i><br>
 						<p class="fs-4 text-center">
-							Tutoria total <br> <%= docDAO.countTotalTutoriaByDocenteId(currentLoginDocente.getId()) %>
+							Tutoria total <br> <%=com.tme.security.Html.escape(docDAO.countTotalTutoriaByDocenteId(currentLoginDocente.getId()))%>
 						</p>
 					</div>
 				</div>

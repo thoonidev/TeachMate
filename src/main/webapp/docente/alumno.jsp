@@ -58,11 +58,12 @@
 						<!-- message print -->
 						<!-- for success msg -->
 						<c:if test="${not empty successMsg}">
-							<script>
+							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'success',
 									title : 'Éxito',
-									text : '${successMsg}',
+									text : document.getElementById("flash-successMsg").textContent,
 								});
 							</script>
 							<c:remove var="successMsg" scope="session" />
@@ -70,11 +71,12 @@
 
 						<!-- for error msg -->
 						<c:if test="${not empty errorMsg}">
-							<script>
+							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
+<script>
 								Swal.fire({
 									icon : 'error',
 									title : 'Error',
-									text : '${errorMsg}',
+									text : document.getElementById("flash-errorMsg").textContent,
 								});
 							</script>
 							<c:remove var="errorMsg" scope="session" />
@@ -109,19 +111,19 @@
 								%>
 
 								<tr>
-									<th><%=tutlist.getNombre()%></th>
-									<td><%=tutlist.getGenero()%></td>
-									<td><%=tutlist.getEdad()%></td>
-									<td><%=tutlist.getFtutoria()%></td>
-									<td><%=tutlist.getEmail()%></td>
-									<td><%=tutlist.getTelefono()%></td>
-									<td><%=tutlist.getExperiencia()%></td>
-									<td><%=tutlist.getEstado()%></td>
+									<th><%=com.tme.security.Html.escape(tutlist.getNombre())%></th>
+									<td><%=com.tme.security.Html.escape(tutlist.getGenero())%></td>
+									<td><%=com.tme.security.Html.escape(tutlist.getEdad())%></td>
+									<td><%=com.tme.security.Html.escape(tutlist.getFtutoria())%></td>
+									<td><%=com.tme.security.Html.escape(tutlist.getEmail())%></td>
+									<td><%=com.tme.security.Html.escape(tutlist.getTelefono())%></td>
+									<td><%=com.tme.security.Html.escape(tutlist.getExperiencia())%></td>
+									<td><%=com.tme.security.Html.escape(tutlist.getEstado())%></td>
 
 									<td>
 										<%
 										if ("Pendiente".equals(tutlist.getEstado())) {
-										%> <a href="comentario.jsp?id=<%=tutlist.getId()%>"
+										%> <a href="comentario.jsp?id=<%=com.tme.security.Html.escape(tutlist.getId())%>"
 										class="btn btn-primary btn-sm">Comentario</a> 
 										<%
  										} else {

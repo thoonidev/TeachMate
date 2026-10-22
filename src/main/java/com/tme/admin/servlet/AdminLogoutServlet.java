@@ -13,14 +13,12 @@ import javax.servlet.http.HttpSession;
 public class AdminLogoutServlet extends HttpServlet {
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
 		//obtener sesión significa obtener "adminObj" y eliminarlo, ¡cerrar sesión!
-		HttpSession session = req.getSession();
-		session.removeAttribute("adminObj");
-		//mostrar mensaje después de cerrar sesión
-		session.setAttribute("successMsg", "Cerró sesión correctamente");
-		resp.sendRedirect("admin_login.jsp");
+		HttpSession session = req.getSession(false);
+        if (session != null) session.invalidate();
+        resp.sendRedirect("admin_login.jsp");
 		
 		
 		
