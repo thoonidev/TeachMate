@@ -110,11 +110,21 @@ public class SecurityIntegrationTest {
 
     @Test public void anonymousAndWrongRolesCannotReachPagesOrActions() throws Exception {
         Browser browser = new Browser();
-        for (String route : List.of("/admin/alumno.jsp", "/admin/list_docente.jsp", "/docente/comentario.jsp?id=1", "/userChangePassword"))
-            assertEquals(route, 403, browser.get(route).statusCode());
+        for (String route : List.of("/admin/alumno.jsp", "/admin/list_docente.jsp", "/docente/comentario.jsp?id=1", "/list_tutoria.jsp")) {
+            HttpResponse<String> response = browser.get(route);
+            assertEquals(route, 302, response.statusCode());
+            String login = route.startsWith("/admin/") ? "/admin_login.jsp"
+                    : route.startsWith("/docente/") ? "/docente_login.jsp" : "/alumno_login.jsp";
+            assertTrue(response.headers().firstValue("location").orElse("").endsWith(login));
+        }
+        assertEquals(403, browser.get("/userChangePassword").statusCode());
         assertEquals(403, browser.post("/addDocente", "").statusCode());
         browser.login("/alumno_login.jsp", "/userLogin", "user@example.invalid", PASSWORD);
-        assertEquals(403, browser.get("/admin/index.jsp").statusCode());
+        HttpResponse<String> denied = browser.get("/admin/index.jsp");
+        assertEquals(403, denied.statusCode());
+        assertTrue(denied.body().contains("Tu cuenta no tiene permiso"));
+        assertTrue(denied.body().contains("Volver al inicio"));
+        assertFalse(denied.body().contains("HTTP Status 403"));
         assertEquals(403, browser.post("/updateEstado", "").statusCode());
     }
 
@@ -133,7 +143,7 @@ public class SecurityIntegrationTest {
         assertEquals(403, browser.post("/userLogout", "csrfToken=" + before).statusCode());
         assertEquals(405, browser.get("/userLogout").statusCode());
         assertEquals(302, browser.post("/userLogout", "csrfToken=" + after).statusCode());
-        assertEquals(403, browser.get("/change_password.jsp").statusCode());
+        assertEquals(302, browser.get("/change_password.jsp").statusCode());
     }
 
     @Test public void userIdTamperingCannotChangeAnotherPassword() throws Exception {
@@ -276,5 +286,41 @@ public class SecurityIntegrationTest {
             } finally { statement.execute("alter table temporarily_unavailable rename to especialidad"); }
         }
         assertEquals(200, browser.get("/health").statusCode());
+    }
+
+    @Test public void publicTutoriaFormExplainsLoginAndRejectsAnonymousSubmission() throws Exception {
+        Browser browser = new Browser();
+        HttpResponse<String> page = browser.get("/reg_tutoria.jsp");
+        assertEquals(page.body(), 200, page.statusCode());
+        assertTrue(page.body().contains("Para enviar una solicitud de tutoría, inicia sesión como alumno."));
+        assertTrue(page.body().contains("Iniciar sesión para solicitar"));
+        assertTrue(page.body().contains("href=\"reg_alumno.jsp\""));
+        assertTrue(page.body().contains("name=\"docenteNameSelect\""));
+        String token = browser.token("/reg_tutoria.jsp");
+        int before;
+        try (Connection connection = db(); Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery("select count(*) from tutoria")) {
+            result.next(); before = result.getInt(1);
+        }
+        HttpResponse<String> denied = browser.post("/addTutoria", "csrfToken=" + token + "&userId=1");
+        assertEquals(403, denied.statusCode());
+        assertTrue(denied.body().contains("inicia sesión con la cuenta correspondiente"));
+        try (Connection connection = db(); Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery("select count(*) from tutoria")) {
+            result.next(); assertEquals(before, result.getInt(1));
+        }
+    }
+
+    @Test public void otherRolesSeeTutoriaGuidanceButCannotSubmit() throws Exception {
+        for (String role : List.of("docente", "admin")) {
+            Browser browser = new Browser();
+            if (role.equals("docente")) browser.login("/docente_login.jsp", "/docenteLogin", "doc1@example.invalid", PASSWORD);
+            else browser.login("/admin_login.jsp", "/adminLogin", "admin@example.invalid", "Admin-test-12345");
+            HttpResponse<String> page = browser.get("/reg_tutoria.jsp");
+            assertEquals(page.body(), 200, page.statusCode());
+            assertTrue(page.body().contains("Las solicitudes de tutoría se realizan con una cuenta de alumno."));
+            assertTrue(page.body().contains("Iniciar sesión para solicitar"));
+            assertEquals(403, browser.post("/addTutoria", "csrfToken=" + browser.token("/reg_tutoria.jsp")).statusCode());
+        }
     }
 }

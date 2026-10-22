@@ -20,7 +20,7 @@
 <title>Tutoria</title>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- all css include -->
-<%@include file="../component/allcss.jsp"%>
+<%@include file="component/allcss.jsp"%>
 
 <!-- CSS personalizado para esta página. -->
 <style type="text/css">
@@ -78,6 +78,23 @@
 				<div class="card my-card">
 					<div class="card-body">
 						<p class="text-center fs-3">Tutoria</p>
+                        <c:choose>
+                            <c:when test="${not empty sessionScope.userObj}">
+                                <p class="text-muted">Completa tus datos para solicitar una tutoría.</p>
+                            </c:when>
+                            <c:when test="${not empty sessionScope.adminObj or not empty sessionScope.docenteObj}">
+                                <div class="alert alert-info" role="status">
+                                    Las solicitudes de tutoría se realizan con una cuenta de alumno.
+                                    Puedes consultar el formulario e <a href="alumno_login.jsp">iniciar sesión como alumno</a>.
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="alert alert-info" role="status">
+                                    Para enviar una solicitud de tutoría, inicia sesión como alumno.
+                                    <a href="alumno_login.jsp">Iniciar sesión</a> o <a href="reg_alumno.jsp">crear una cuenta</a>.
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
 
 						<!-- message print -->
 						<!-- for success msg -->
@@ -112,8 +129,6 @@
 						<form class="row g-3" action="addTutoria" method="post">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 							
-							<!-- tomar ID de usuario en el campo oculto -->
-							<input type="hidden" name="userId" value="${ userObj.id }">
 							
 							<div class="col-md-6">
 								<label class="form-label">Nombre completo</label> <input required="required"
@@ -191,7 +206,7 @@
 
 							<c:if test="${empty userObj}">
 								<div class="col-md-12">
-									<a href="alumno_login.jsp" class="btn text-white col-md-12" style="background-color: rgba(32, 190, 198);">Enviar</a>
+									<a href="alumno_login.jsp" class="btn text-white col-md-12" style="background-color: rgba(32, 190, 198);">Iniciar sesión para solicitar</a>
 								</div>
 							</c:if>
 

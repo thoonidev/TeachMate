@@ -17,7 +17,7 @@ import javax.servlet.http.*;
 public class SecurityFilter implements Filter {
     private static final Set<String> ADMIN = Set.of("/addDocente", "/updateDocente", "/deleteDocente", "/addEspecialidad", "/adminLogout");
     private static final Set<String> DOCENTE = Set.of("/docenteEditProfile", "/docenteChangePassword", "/updateEstado", "/docenteLogout");
-    private static final Set<String> USER = Set.of("/addTutoria", "/userChangePassword", "/userLogout", "/change_password.jsp", "/list_tutoria.jsp", "/reg_tutoria.jsp");
+    private static final Set<String> USER = Set.of("/addTutoria", "/userChangePassword", "/userLogout", "/change_password.jsp", "/list_tutoria.jsp");
     private static final Set<String> AUTH = Set.of("/adminLogin", "/docenteLogin", "/userLogin", "/user_register");
     private static final Map<String, AttemptWindow> ATTEMPTS = new ConcurrentHashMap<>();
 
@@ -37,12 +37,30 @@ public class SecurityFilter implements Filter {
         String role = requiredRole(path);
         HttpSession session = request.getSession(false);
         if (role != null && (session == null || session.getAttribute(role) == null)) {
-            response.sendError(403, "Debe iniciar sesión con el rol autorizado."); return;
+            response.setHeader("Cache-Control", "no-store");
+            boolean authenticated = session != null && (session.getAttribute("userObj") != null
+                    || session.getAttribute("docenteObj") != null || session.getAttribute("adminObj") != null);
+            String login = role.equals("adminObj") ? "/admin_login.jsp"
+                    : role.equals("docenteObj") ? "/docente_login.jsp" : "/alumno_login.jsp";
+            boolean navigation = (request.getMethod().equals("GET") || request.getMethod().equals("HEAD"))
+                    && (path.endsWith(".jsp") || path.equals("/admin") || path.equals("/docente") || path.endsWith("/"));
+            if (!authenticated && navigation) {
+                request.getSession(true).setAttribute("errorMsg", "Inicia sesión para acceder a esta página.");
+                response.sendRedirect(request.getContextPath() + login);
+            } else {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                request.setAttribute("accessMessage", authenticated
+                        ? "Tu cuenta no tiene permiso para acceder a esta sección. Puedes volver al inicio o ingresar con la cuenta correspondiente."
+                        : "Para realizar esta acción, inicia sesión con la cuenta correspondiente.");
+                request.setAttribute("accessLogin", login);
+                request.getRequestDispatcher("/WEB-INF/access-denied.jsp").forward(request, response);
+            }
+            return;
         }
         if (!Set.of("GET", "HEAD", "POST").contains(request.getMethod())) {
             response.sendError(405); return;
         }
-        if (role != null || AUTH.contains(path)) response.setHeader("Cache-Control", "no-store");
+        if (role != null || AUTH.contains(path) || path.equals("/reg_tutoria.jsp")) response.setHeader("Cache-Control", "no-store");
         if (request.getMethod().equals("POST")) {
             String expected = session == null ? null : (String) session.getAttribute("csrfToken");
             if (!validToken(expected, request.getParameter("csrfToken"))) {
