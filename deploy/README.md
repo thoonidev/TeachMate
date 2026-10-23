@@ -28,6 +28,21 @@ una base H2 aislada en memoria; no acceden a tu MySQL. Las dependencias de prueb
 no se incluyen en el WAR. Para ejecutar sin Docker, copiar el WAR a `webapps` de
 Tomcat 9 y abrir `http://localhost:8080/TeachMate/`.
 
+Para repetir las pruebas de datos, migración y concurrencia con **MySQL 8 real**,
+usar una instancia local dedicada a pruebas y su puerto:
+
+```powershell
+mvn "-Dteachmate.test.mysql.port=PUERTO" "-Dtest=TutoriaDataTest,TutoriaReglasTest" test
+```
+
+Estas pruebas solo conectan a `127.0.0.1`, crean bases con nombres aleatorios
+`teachmate_validation_...` y las eliminan al terminar. Utilizan `root` de esa
+instancia de pruebas; si tiene contraseña, configurarla en la variable temporal
+`TEACHMATE_TEST_MYSQL_PASSWORD` de la terminal, sin escribirla en Git ni en el chat.
+No usar el puerto de una base de trabajo o producción. La opción no se activa en
+la compilación habitual ni durante la construcción de Render.
+La instancia de pruebas debe admitir TLS: estas conexiones exigen cifrado.
+
 ## Base de datos
 
 Crear una base MySQL 8 vacía con `utf8mb4`, seleccionarla en el cliente SQL e
@@ -68,6 +83,91 @@ hashes válidos existentes y revierte las conversiones si falla. Mantiene el acc
 con las claves antiguas; el próximo cambio exige de 12 a 128 caracteres. El inicio
 de sesión ya no acepta claves guardadas en texto plano. Un resultado de cero es
 válido si no hay cuentas. Proteger el respaldo, que todavía contiene claves antiguas.
+
+## Actualización de tutorías en una base existente
+
+Antes de publicar el código que usa comentarios, horarios y docentes activos:
+respaldar MySQL, detener la versión anterior y ejecutar una sola vez
+`database/tutorias-migration.sql`. Después publicar la aplicación y comprobar
+`/health`. La migración no se ejecuta automáticamente durante el arranque.
+No aplicar este script a una base creada con el `schema.sql` actual.
+
+El formato anterior guardaba el comentario dentro de `estado`: los valores
+pendientes o vacíos se conservan como pendientes; el resto se copia a `comentario`
+y se considera completado, siguiendo el comportamiento anterior. Ese texto puede
+coincidir con un nombre de estado nuevo y también se conserva como comentario.
+No hay información suficiente para reconstruir la hora: las filas antiguas quedan
+con horario «Por definir». Revisar los casos ambiguos contra el respaldo.
+
+Los estados admitidos son Pendiente, Aceptada, Rechazada, Cancelada y Completada.
+Desde Pendiente se puede aceptar, rechazar o cancelar; desde Aceptada se puede
+completar o cancelar. Los estados finales no se reabren. Guardar un comentario no
+ejecuta una transición. La desactivación de un docente conserva sus tutorías sin
+cambiar su estado, lo retira del selector y revoca sus accesos.
+
+Las nuevas solicitudes requieren una fecha y hora futuras en `America/Lima`,
+duración de 15 a 180 minutos y finalización el mismo día. Pendiente y Aceptada
+reservan el horario del alumno y del docente; las demás liberan ese horario.
+Los intervalos contiguos se permiten. El registro comprueba las dos agendas dentro
+de una transacción, incluso ante envíos simultáneos.
+
+El docente asignado acepta o rechaza solicitudes pendientes, cancela antes del
+inicio y completa las aceptadas a partir de su hora de finalización. El alumno
+solo cancela sus propias tutorías antes del inicio. El administrador puede cancelar
+pendientes o aceptadas, incluso iniciadas o de docentes inactivos, para resolver
+incidencias. Cada acción se valida en el servidor y requiere sesión y CSRF.
+Las solicitudes antiguas sin horario se pueden rechazar o cancelar, pero no aceptar
+ni completar; no se inventan horas ni se reabren estados finales.
+
+### Actualizar un servicio que ya está publicado
+
+1. Preparar y comprobar el nuevo código en una rama distinta de la desplegada.
+   Subir esa rama a GitHub permite revisar los cambios sin actualizar el servicio.
+2. Guardar un respaldo completo de la base existente, incluidos estructura y datos.
+   Conservar también el identificador del commit que ejecuta Render.
+3. Desactivar temporalmente el despliegue automático y detener el servicio anterior
+   antes de modificar el esquema. Así no escribirá comentarios en la columna
+   `estado` mientras se actualiza la base.
+4. En MySQL Workbench, seleccionar expresamente la base y comprobar:
+
+   ```sql
+   SELECT DATABASE();
+   SELECT 'docente' AS tabla, COUNT(*) AS filas FROM docente
+   UNION ALL SELECT 'user_details', COUNT(*) FROM user_details
+   UNION ALL SELECT 'tutoria', COUNT(*) FROM tutoria
+   UNION ALL SELECT 'especialidad', COUNT(*) FROM especialidad;
+   SELECT table_name, column_name
+   FROM information_schema.columns
+   WHERE table_schema = DATABASE()
+     AND ((table_name = 'docente' AND column_name = 'activo')
+       OR (table_name = 'tutoria'
+           AND column_name IN ('comentario', 'hora_inicio', 'duracion_minutos')));
+   ```
+
+   El resultado de columnas debe estar vacío para el esquema anterior. Si aparecen
+   columnas nuevas, revisar qué migración ya se aplicó; no repetir el script.
+   Para una instalación de Aiven que usa `defaultdb`, comprobar ese nombre en
+   `SELECT DATABASE()`.
+5. Aplicar `database/tutorias-migration.sql` una sola vez. Comparar los cuatro
+   totales con los anteriores y comprobar:
+
+   ```sql
+   SELECT estado, COUNT(*) AS filas FROM tutoria GROUP BY estado;
+   SELECT COUNT(*) AS horarios_por_definir
+   FROM tutoria WHERE hora_inicio IS NULL AND duracion_minutos IS NULL;
+   ```
+
+6. Integrar la rama revisada en la rama que utiliza Render y desplegar ese commit.
+   Comprobar `/health`, los accesos de los tres roles, una solicitud futura,
+   aceptación, comentarios y cancelación. La finalización se habilita cuando
+   termina la sesión; no cambiar las fechas de datos reales para probarla.
+7. Restaurar el despliegue automático cuando la comprobación termine.
+
+Si falla la migración, mantener el servicio detenido y revisar cada instrucción:
+MySQL no revierte automáticamente los cambios de estructura anteriores al fallo.
+Para volver a la versión anterior, conservar primero una copia de los datos
+actuales y restaurar el respaldo previo junto con el código anterior. No basta con
+desplegar el WAR antiguo sobre el esquema nuevo.
 
 ## Administrador y variables
 

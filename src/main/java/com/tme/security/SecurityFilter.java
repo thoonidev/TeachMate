@@ -15,9 +15,9 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 
 public class SecurityFilter implements Filter {
-    private static final Set<String> ADMIN = Set.of("/addDocente", "/updateDocente", "/deleteDocente", "/addEspecialidad", "/adminLogout");
-    private static final Set<String> DOCENTE = Set.of("/docenteEditProfile", "/docenteChangePassword", "/updateEstado", "/docenteLogout");
-    private static final Set<String> USER = Set.of("/addTutoria", "/userChangePassword", "/userLogout", "/change_password.jsp", "/list_tutoria.jsp");
+    private static final Set<String> ADMIN = Set.of("/addDocente", "/updateDocente", "/deactivateDocente", "/reactivateDocente", "/addEspecialidad", "/adminLogout", "/adminCancelarTutoria");
+    private static final Set<String> DOCENTE = Set.of("/docenteEditProfile", "/docenteChangePassword", "/updateComentario", "/docenteLogout", "/cambiarEstadoTutoria");
+    private static final Set<String> USER = Set.of("/addTutoria", "/userChangePassword", "/userLogout", "/change_password.jsp", "/list_tutoria.jsp", "/cancelarTutoria");
     private static final Set<String> AUTH = Set.of("/adminLogin", "/docenteLogin", "/userLogin", "/user_register");
     private static final Map<String, AttemptWindow> ATTEMPTS = new ConcurrentHashMap<>();
 
@@ -36,6 +36,11 @@ public class SecurityFilter implements Filter {
         }
         String role = requiredRole(path);
         HttpSession session = request.getSession(false);
+        if ("docenteObj".equals(role) && session != null && session.getAttribute("docenteObj") instanceof Docente docente
+                && !new com.tme.dao.DocenteDAO(DBConnection.getConn()).isActiveDocente(docente.getId())) {
+            session.invalidate();
+            session = null;
+        }
         if (role != null && (session == null || session.getAttribute(role) == null)) {
             response.setHeader("Cache-Control", "no-store");
             boolean authenticated = session != null && (session.getAttribute("userObj") != null
@@ -75,11 +80,11 @@ public class SecurityFilter implements Filter {
                 response.sendError(400, exception.getMessage()); return;
             }
         }
-        if (path.equals("/docente/comentario.jsp") || path.equals("/admin/edit_docente.jsp") || path.equals("/updateEstado")) {
+        if (path.equals("/docente/comentario.jsp") || path.equals("/admin/edit_docente.jsp") || path.equals("/updateComentario")) {
             int id;
             try { id = positiveId(request, "id"); }
             catch (IllegalArgumentException exception) { response.sendError(400); return; }
-            if (path.equals("/docente/comentario.jsp") || path.equals("/updateEstado")) {
+            if (path.equals("/docente/comentario.jsp") || path.equals("/updateComentario")) {
                 Docente docente = (Docente) session.getAttribute("docenteObj");
                 Tutoria tutoria = new TutoriaDAO(DBConnection.getConn()).getTutoriaById(id);
                 if (tutoria == null || tutoria.getDocenteId() != docente.getId()) {
@@ -162,11 +167,23 @@ public class SecurityFilter implements Filter {
             field(request, "oldPassword", 128);
             password(request, "newPassword");
         }
-        if (path.equals("/deleteDocente")) positiveId(request, "id");
+        if (path.equals("/deactivateDocente") || path.equals("/reactivateDocente")) positiveId(request, "id");
         if (path.equals("/addEspecialidad")) field(request, "especialidadNombre", 45);
-        if (path.equals("/updateEstado")) { positiveId(request, "id"); field(request, "comentario", 500); }
+        if (path.equals("/updateComentario")) { positiveId(request, "id"); field(request, "comentario", 500); }
+        if (Set.of("/cambiarEstadoTutoria", "/cancelarTutoria", "/adminCancelarTutoria").contains(path)) positiveId(request, "id");
+        if (path.equals("/cambiarEstadoTutoria")) com.tme.modal.EstadoTutoria.desdeValor(request.getParameter("estado"));
         if (path.equals("/addTutoria")) {
             positiveId(request, "docenteNameSelect");
+            try {
+                if (request.getParameter("horaInicio") == null || !request.getParameter("horaInicio").matches("[0-2][0-9]:[0-5][0-9]")) {
+                    throw new IllegalArgumentException("Indique una hora válida.");
+                }
+                java.time.LocalTime.parse(request.getParameter("horaInicio"));
+                int duration = Integer.parseInt(request.getParameter("duracionMinutos"));
+                if (duration < 15 || duration > 180) throw new IllegalArgumentException("La duración debe ser de 15 a 180 minutos.");
+            } catch (java.time.format.DateTimeParseException | NumberFormatException exception) {
+                throw new IllegalArgumentException("Indique una hora y una duración válidas.");
+            }
             for (String name : Set.of("genero", "edad", "ftutoria", "telefono", "experiencia")) field(request, name, 45);
             field(request, "direccion", 500);
             try {

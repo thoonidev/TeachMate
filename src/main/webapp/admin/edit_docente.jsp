@@ -7,70 +7,30 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 
-<!-- for jstl tag -->
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<!-- end of jstl tag -->
 
 <%@page isELIgnored="false"%>
 
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Doctor page</title>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <%@include file="../component/allcss.jsp"%>
 
-<!-- CSS personalizado para esta página. -->
-<style type="text/css">
-.my-card {
-	box-shadow: 0px 0px 10px 1px rgb(175, 175, 175);
-	/*box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.3);*/
-}
-</style>
-<!-- Fin del CSS personalizado para esta página. -->
-
 </head>
-<body>
-	<%@include file="navbar.jsp"%>
-
+<body class="tm-page">
+	<%@include file="../component/navbar.jsp"%>
+<main id="contenido" class="tm-main" tabindex="-1">
+<%@ include file="../component/messages.jsp" %>
 
 	<div class="container-fluid p-3">
 		<div class="row">
 			<div class="col-md-4 offset-4">
 				<div class="card my-card">
 					<div class="card-body">
-						<p class="fs-3 text-center text-dark">Editar Profesor</p>
-
-						<!-- message print -->
-						<!-- for success msg -->
-						<c:if test="${not empty successMsg}">
-							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
-<script>
-								Swal.fire({
-									icon : 'success',
-									title : 'Éxito',
-									text : document.getElementById("flash-successMsg").textContent,
-								});
-							</script>
-							<c:remove var="successMsg" scope="session" />
-						</c:if>
-
-						<!-- for error msg -->
-						<c:if test="${not empty errorMsg}">
-							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
-<script>
-								Swal.fire({
-									icon : 'error',
-									title : 'Error',
-									text : document.getElementById("flash-errorMsg").textContent,
-								});
-							</script>
-							<c:remove var="errorMsg" scope="session" />
-						</c:if>
-						<!-- End of message print -->
-
-
+						<h1 class="tm-page-title">Editar Profesor</h1>
 
 						<%
 						//obtenga docente id especifico con la ayuda de request.getParameter() 
@@ -80,33 +40,29 @@
 						Docente docente = docDAO.getDocenteById(id);//llame a getDocenteById(id) que regresa al docente con una identificación específica.
 						%>
 
-						<!-- boostrap form -->
-						
-						<!-- Formulario de detalles de los docentes con datos/detalles enviados por el id específico con un campo editable -->
-						
 						<form action="../updateDocente" method="post">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 							<div class="mb-3">
-								<label class="form-label">Nombre completo</label> <input
+								<label for="tm-nombre-1" class="form-label">Nombre completo</label> <input id="tm-nombre-1"
 									name="nombre" type="text" placeholder="Ingrese nombre completo"
 									class="form-control" value="<%=com.tme.security.Html.escape(docente.getNombre())%>">
 
 							</div>
 							<div class="mb-3">
-								<label class="form-label">Fecha de nacimiento</label> <input
+								<label for="tm-fnacim-2" class="form-label">Fecha de nacimiento</label> <input id="tm-fnacim-2"
 									name="fnacim" type="date" placeholder="Ingrese fnacim"
 									class="form-control" value="<%=com.tme.security.Html.escape(docente.getFnacim())%>">
 
 							</div>
 							<div class="mb-3">
-								<label class="form-label">Calificación</label> <input
+								<label for="tm-calificacion-3" class="form-label">Calificación</label> <input id="tm-calificacion-3"
 									name="calificacion" type="text"
 									placeholder="Ingrese calificacion" class="form-control"
 									value="<%=com.tme.security.Html.escape(docente.getCalificacion())%>">
 							</div>
 
 							<div class="mb-3">
-								<label class="form-label">Especialidad</label> <select
+								<label for="tm-especialidad-4" class="form-label">Especialidad</label> <select id="tm-especialidad-4"
 									class="form-control" name="especialidad">
 									<option><%=com.tme.security.Html.escape(docente.getEspecialidad())%></option>
 
@@ -126,34 +82,30 @@
 							</div>
 
 							<div class="mb-3">
-								<label class="form-label">Email</label> <input
+								<label for="tm-email-5" class="form-label">Correo electrónico</label> <input id="tm-email-5"
 									name="email" type="email" placeholder="Ingrese correo electronico"
 									class="form-control" value="<%=com.tme.security.Html.escape(docente.getEmail())%>">
 
 							</div>
 							<div class="mb-3">
-								<label class="form-label">Telefono</label> <input name="telefono"
+								<label for="tm-telefono-6" class="form-label">Teléfono</label> <input id="tm-telefono-6" name="telefono"
 									type="text" placeholder="Ingrese telefono"
 									class="form-control" value="<%=com.tme.security.Html.escape(docente.getTelefono())%>">
 
 							</div>
 							<div class="mb-3">
-								<label class="form-label">Clave</label> <input
+								<label for="tm-clave-7" class="form-label">Clave</label> <input id="tm-clave-7"
 									name="clave" maxlength="128" minlength="12" autocomplete="new-password" type="password" placeholder="Dejar vacío para conservar la contraseña"
 									class="form-control" value="">
 							</div>
-							
-							<!-- para actualizar los datos id usuario se utilizó la identificación "oculta -->
+
 							<div class="mb-3">
 								<input name="id" type="hidden" class="form-control"
 									value="<%=com.tme.security.Html.escape(docente.getId())%>">
 							</div>
 
-							<button type="submit" class="btn btn-dark text-white col-md-12">Actualizar</button>
+							<button type="submit" class="btn btn-primary btn-dark text-white col-md-12">Actualizar</button>
 						</form>
-						<!-- <br>¿No tienes una cuenta? <a href="#!"
-							class="text-decoration-none">crea uno</a> -->
-						<!-- end of boostrap form -->
 
 					</div>
 
@@ -163,13 +115,7 @@
 		</div>
 	</div>
 
-
-
-
-
-
-
-
-
+</main>
+<%@ include file="../component/footer.jsp" %>
 </body>
 </html>

@@ -13,7 +13,11 @@ public class Tutoria {
 	private String experiencia;
 	private int docenteId;
 	private String direccion;
-	private String estado;
+	private EstadoTutoria estado = EstadoTutoria.PENDIENTE;
+	private String comentario = "";
+    private String nombreDocente;
+	private java.time.LocalTime horaInicio;
+	private Integer duracionMinutos;
 	
 	
 	public Tutoria() {
@@ -36,7 +40,7 @@ public class Tutoria {
 		this.experiencia = experiencia;
 		this.docenteId = docenteId;
 		this.direccion = direccion;
-		this.estado = estado;
+		setEstado(estado);
 	}
 
 
@@ -53,7 +57,7 @@ public class Tutoria {
 		this.experiencia = experiencia;
 		this.docenteId = docenteId;
 		this.direccion = direccion;
-		this.estado = estado;
+		setEstado(estado);
 	}
 
 
@@ -168,13 +172,26 @@ public class Tutoria {
 
 
 	public String getEstado() {
-		return estado;
+		return estado.getValor();
 	}
 
 
 	public void setEstado(String estado) {
-		this.estado = estado;
+		this.estado = EstadoTutoria.desdeValor(estado);
 	}
+
+    public String getComentario() { return comentario; }
+    public String getNombreDocente() { return nombreDocente; }
+    public void setNombreDocente(String nombreDocente) { this.nombreDocente = nombreDocente; }
+    public void setComentario(String comentario) { this.comentario = comentario == null ? "" : comentario; }
+    public java.time.LocalTime getHoraInicio() { return horaInicio; }
+    public void setHoraInicio(java.time.LocalTime horaInicio) { this.horaInicio = horaInicio; }
+    public Integer getDuracionMinutos() { return duracionMinutos; }
+    public void setDuracionMinutos(Integer duracionMinutos) { this.duracionMinutos = duracionMinutos; }
+    public String getHorario() {
+        return horaInicio == null || duracionMinutos == null ? "Por definir"
+                : horaInicio.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")) + " · " + duracionMinutos + " min";
+    }
 	
 	
 	

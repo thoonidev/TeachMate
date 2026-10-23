@@ -4,6 +4,7 @@
 !src/**
 !database/
 !database/schema.sql
+!database/tutorias-migration.sql
 !deploy/
 !deploy/start.sh
 !deploy/tomcat/

@@ -5,82 +5,48 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 
-
-<!-- for jstl tag -->
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<!-- end of jstl tag -->
 
 <%@page isELIgnored="false"%>
 
-
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Tutoria</title>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- all css include -->
+
 <%@include file="component/allcss.jsp"%>
 
-<!-- CSS personalizado para esta página. -->
-<style type="text/css">
-.my-card {
-	box-shadow: 0px 0px 10px 1px rgba(173, 216, 230, 1);
-	/*box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.3);*/
-}
-
-/* backgournd image css */
-
-/*.my-bg-img{
-	background: linear-gradient(rgba(0, 0, 0, .4), rgba(0, 0, 0, .4)),url("img/img01.jpg");
-	height: 20vh;
-	width: 100%;
-	background-size:cover;
-	background-repeat: no-repeat;
-	
-}*/
-
-/* backgournd image css */
-</style>
-<!-- Fin del CSS personalizado para esta página. -->
-
 </head>
-<body>
+<body class="tm-page">
 	<%@include file="component/navbar.jsp"%>
-
-	<!-- Inicio 1st Div -->
-
-	<div class="container-fluid my-bg-img p-5">
-		<!-- css background image -->
-		<p class="text-center fs-2 text-white"></p>
-
-	</div>
-
-	<!-- Fin of 1st Div -->
-
-
-	<!-- 2nd Div -->
+<main id="contenido" class="tm-main" tabindex="-1">
+<%@ include file="component/messages.jsp" %>
+<c:set var="datosTutoria" value="${sessionScope.tutoriaForm}" />
+<c:remove var="tutoriaForm" scope="session" />
+<c:set var="docenteSeleccionado" value="${datosTutoria.docenteNameSelect}" scope="request" />
 
 	<div class="container p-3">
-		<p class="fs-2"></p>
-
 		<div class="row">
-			
-			<!-- col-1 -->
-			<div class="col-md-6 p-5">
-				<!-- for Background image -->
-				<!-- <img alt="" src="img/t1.jpg" width="500px" height="400px"> -->
-				<img alt="" src="img/t1.jpg" width="370" height="">
+
+			<div class="col-md-5 tm-aside-column">
+
+                <aside class="tm-form-aside">
+                    <p class="tm-eyebrow">Un espacio para tus preguntas</p>
+                    <h2>Tu próximo paso,<br>a tu ritmo.</h2>
+                    <p>Elige un docente y cuéntale qué necesitas reforzar. Podrás consultar su respuesta y el seguimiento de la sesión en Mis tutorías.</p>
+                    <p class="text-muted">Sesiones de 15 a 180 minutos · Hora de Lima</p>
+                    <img src="img/t1.jpg" alt="Alumna estudiando con sus apuntes" width="598" height="900" loading="lazy">
+                </aside>
 			</div>
-			
-			<!-- col-2 -->
-			<div class="col-md-6">
+
+			<div class="col-md-7">
 				<div class="card my-card">
 					<div class="card-body">
-						<p class="text-center fs-3">Tutoria</p>
+						<h1 class="tm-page-title">Solicitar tutoría</h1>
                         <c:choose>
                             <c:when test="${not empty sessionScope.userObj}">
-                                <p class="text-muted">Completa tus datos para solicitar una tutoría.</p>
+                                <p class="text-muted">Elige una fecha y hora futuras (Lima). El horario queda reservado mientras el docente revisa tu solicitud.</p>
                             </c:when>
                             <c:when test="${not empty sessionScope.adminObj or not empty sessionScope.docenteObj}">
                                 <div class="alert alert-info" role="status">
@@ -96,164 +62,112 @@
                             </c:otherwise>
                         </c:choose>
 
-						<!-- message print -->
-						<!-- for success msg -->
-						<c:if test="${not empty successMsg}">
-							<span hidden id="flash-successMsg"><c:out value="${successMsg}" /></span>
-<script>
-								Swal.fire({
-									icon : 'success',
-									title : 'Éxito',
-									text : document.getElementById("flash-successMsg").textContent,
-								});
-							</script>
-							<c:remove var="successMsg" scope="session" />
-						</c:if>
-
-						<!-- for error msg -->
-						<c:if test="${not empty errorMsg}">
-							<span hidden id="flash-errorMsg"><c:out value="${errorMsg}" /></span>
-<script>
-								Swal.fire({
-									icon : 'error',
-									title : 'Error',
-									text : document.getElementById("flash-errorMsg").textContent,
-								});
-							</script>
-							<c:remove var="errorMsg" scope="session" />
-						</c:if>
-						<!-- End of message print -->
-
-
-						<!-- boostrap form -->
 						<form class="row g-3" action="addTutoria" method="post">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-							
-							
+
 							<div class="col-md-6">
-								<label class="form-label">Nombre completo</label> <input required="required"
-									name="nombre" type="text" placeholder="Ingrese nombre completo"
+								<label for="tm-nombre-1" class="form-label">Nombre completo</label> <input id="tm-nombre-1" required="required"
+									name="nombre" type="text" placeholder="Ingrese nombre completo" maxlength="45" value="<c:out value='${empty datosTutoria ? userObj.nombre : datosTutoria.nombre}'/>"
 									class="form-control">
 
 							</div>
 
 							<div class="col-md-6">
-								<label class="form-label">Genero</label> <select
+								<label for="tm-genero-2" class="form-label">Género</label> <select id="tm-genero-2"
 									class="form-control" name="genero" required="required">
-									<option selected="selected" disabled="disabled">---Selecciona
-										Genero---</option>
-									<option value="masculino">Masculino</option>
-									<option value="femenino">Fememino</option>
+									<option value="" disabled ${empty datosTutoria.genero ? 'selected' : ''}>---Selecciona Género---</option>
+									<option value="masculino" ${datosTutoria.genero eq 'masculino' ? 'selected' : ''}>Masculino</option>
+									<option value="femenino" ${datosTutoria.genero eq 'femenino' ? 'selected' : ''}>Femenino</option>
 								</select>
 							</div>
 
 							<div class="col-md-6">
-								<label class="form-label">Edad</label> <input name="edad"
+								<label for="tm-edad-3" class="form-label">Edad</label> <input id="tm-edad-3" name="edad" min="1" max="120" value="<c:out value='${datosTutoria.edad}'/>"
 								required="required"	type="number" placeholder="Ingrese edad" class="form-control">
 							</div>
 							<div class="col-md-6">
-								<label class="form-label">Fecha/Tutoria</label> <input
-								required="required"	name="ftutoria" type="date" class="form-control">
+								<label for="tm-ftutoria-4" class="form-label">Fecha</label> <input id="tm-ftutoria-4" value="<c:out value='${datosTutoria.ftutoria}'/>"
+								required="required"	name="ftutoria" type="date" min="<%=java.time.LocalDate.now(com.tme.service.ReglasTutoria.ZONA)%>" class="form-control">
 							</div>
 
+                            <div class="col-md-6">
+                                <label for="horaInicio" class="form-label">Hora (Lima)</label>
+                                <input id="horaInicio" name="horaInicio" type="time" required class="form-control" value="<c:out value='${datosTutoria.horaInicio}'/>">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="duracionMinutos" class="form-label">Duración en minutos</label>
+                                <input id="duracionMinutos" name="duracionMinutos" type="number" min="15" max="180" value="<c:out value='${empty datosTutoria ? 60 : datosTutoria.duracionMinutos}'/>" required class="form-control">
+                                <p class="form-text">De 15 a 180 minutos. La sesión debe terminar el mismo día.</p>
+                            </div>
 							<div class="col-md-6">
-								<label class="form-label">Email</label> <input name="email"
+								<label for="tm-email-5" class="form-label">Correo electrónico</label> <input id="tm-email-5" name="email" maxlength="45" value="<c:out value='${empty datosTutoria ? userObj.email : datosTutoria.email}'/>"
 								required="required"	type="email" placeholder="Ingrese correo electronico" class="form-control">
 							</div>
 
 							<div class="col-md-6">
-								<label class="form-label">Telefono</label> <input name="telefono"
-								required="required"	type="number" maxlength="11" placeholder="Ingrese telefono"
+								<label for="tm-telefono-6" class="form-label">Teléfono</label> <input id="tm-telefono-6" name="telefono"
+									required="required"	type="tel" maxlength="45" placeholder="Ingrese telefono" value="<c:out value='${datosTutoria.telefono}'/>"
 									class="form-control">
 							</div>
 
 							<div class="col-md-6">
-								<label class="form-label">Experiencia</label> <input
+								<label for="tm-experiencia-7" class="form-label">Tema o conocimiento previo</label> <input id="tm-experiencia-7" maxlength="45" value="<c:out value='${datosTutoria.experiencia}'/>"
 								required="required"	name="experiencia" type="text" placeholder="Ingrese conocimiento previo"
 									class="form-control">
 							</div>
 
 							<div class="col-md-6">
-								<label class="form-label">Docente</label> <select
+								<label for="tm-docenteNameSelect-8" class="form-label">Docente</label> <select id="tm-docenteNameSelect-8"
 								 required="required" class="form-control" name="docenteNameSelect">
-									<option selected="selected" disabled="disabled">---Seleccionar---</option>
-									
+									<option value="" disabled ${empty datosTutoria.docenteNameSelect ? 'selected' : ''}>---Seleccionar---</option>
+
 									<%
 									DocenteDAO docenteDAO = new DocenteDAO(DBConnection.getConn());
-									List<Docente> listOfDocente = docenteDAO.getAllDocente();
+									List<Docente> listOfDocente = docenteDAO.getActiveDocentes();
 									for(Docente d : listOfDocente)
-									
+
 									{%>
-									<!-- tomamos el id docente de la tabla docentes -->
-									<option value="<%=com.tme.security.Html.escape(d.getId())%>"> <%=com.tme.security.Html.escape(d.getNombre())%> (<%=com.tme.security.Html.escape(d.getEspecialidad())%>) </option>
-									
+
+									<option value="<%=d.getId()%>" <%=request.getAttribute("docenteSeleccionado") != null && request.getAttribute("docenteSeleccionado").equals(Integer.toString(d.getId())) ? "selected" : ""%>> <%=com.tme.security.Html.escape(d.getNombre())%> (<%=com.tme.security.Html.escape(d.getEspecialidad())%>) </option>
+
 									<%
 									}
 									%>
-									
-									<!-- <option>Nombre docente</option> -->
+
 								</select>
 							</div>
 
-
-							<!-- a continuación son visibles en la parte derecha del formulario-->
-
 							<div class="col-md-12">
-								<label class="form-label">Dirrecion completa</label>
-								<textarea name="direccion" required="required" class="form-control" rows="3" cols=""></textarea>
+								<label for="tm-direccion-9" class="form-label">Dirección completa</label>
+								<textarea id="tm-direccion-9" name="direccion" maxlength="500" required="required" class="form-control" rows="3"><c:out value="${datosTutoria.direccion}" /></textarea>
 							</div>
-
 
 							<c:if test="${empty userObj}">
 								<div class="col-md-12">
-									<a href="alumno_login.jsp" class="btn text-white col-md-12" style="background-color: rgba(32, 190, 198);">Iniciar sesión para solicitar</a>
+									<a href="alumno_login.jsp" class="btn btn-primary text-white col-md-12">Iniciar sesión para solicitar</a>
 								</div>
 							</c:if>
-
 
 							<c:if test="${not empty userObj}">
 
 								<div class="col-md-12">
-									<button type="submit" class="btn text-white col-md-12" style="background-color: rgba(32, 190, 198);">Enviar</button>
+									<button type="submit" class="btn btn-primary text-white col-md-12">Enviar</button>
 								</div>
 
 							</c:if>
 
 						</form>
 
-						<!-- Fin of boostrap form -->
-
 					</div>
 				</div>
 
 			</div>
 
-
-
 		</div>
-
 
 	</div>
 
-	<!-- 2nd Div -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- footer -->
-<%@include file="component/footer.jsp" %>
-<!-- Fin footer -->
-
+</main>
+<%@ include file="component/footer.jsp" %>
 </body>
 </html>

@@ -29,7 +29,7 @@ public class UserLoginServlet extends HttpServlet {
 		
 		if (user!=null) {
 			session = com.tme.security.Sessions.login(req, "userObj", user);
-			resp.sendRedirect("index.jsp"); 
+			resp.sendRedirect("list_tutoria.jsp");
 		}
 		else {
 			session.setAttribute("errorMsg","Usuario o contraseña inválido.");

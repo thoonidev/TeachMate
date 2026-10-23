@@ -10,6 +10,7 @@ public class Docente {
 	private String email;
 	private String telefono;
 	private String clave;
+	private boolean activo = true;
 	
 	
 	public Docente() {
@@ -129,6 +130,9 @@ public class Docente {
 	public void setClave(String clave) {
 		this.clave = clave;
 	}
+
+    public boolean isActivo() { return activo; }
+    public void setActivo(boolean activo) { this.activo = activo; }
 	
 	
 	
