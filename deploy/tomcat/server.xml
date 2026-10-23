@@ -4,7 +4,7 @@
     <Service name="Catalina">
         <Connector address="0.0.0.0" port="${http.port}" protocol="HTTP/1.1"
                    connectionTimeout="20000" maxThreads="40" maxParameterCount="100"
-                   maxPostSize="2097152" URIEncoding="UTF-8" server="TeachMate" />
+                   maxPostSize="2097152" maxSwallowSize="6291456" URIEncoding="UTF-8" server="TeachMate" />
         <Engine name="Catalina" defaultHost="localhost">
             <Host name="localhost" appBase="webapps" unpackWARs="false" autoDeploy="false">
                 <!-- Default internalProxies trusts private/loopback hops only, not every caller. -->

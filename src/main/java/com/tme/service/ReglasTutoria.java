@@ -39,34 +39,14 @@ public final class ReglasTutoria {
                 && b.isBefore(a.plusMinutes(primera.getDuracionMinutos()));
     }
 
-    public static boolean puedeCambiar(Tutoria tutoria, EstadoTutoria siguiente, Rol rol, LocalDateTime ahora) {
-        return errorCambio(tutoria, siguiente, rol, ahora) == null;
+    public static boolean confirmada(Tutoria t) { return t.getEstado().equals("Confirmada") || t.getEstado().equals("Aceptada"); }
+    public static boolean vigente(Tutoria t,LocalDateTime ahora) {
+        LocalDateTime inicio=inicio(t);
+        if(t.getEstado().equals("Pendiente")) return (t.getVenceRespuesta()==null||ahora.isBefore(t.getVenceRespuesta()))&&(inicio==null||ahora.isBefore(inicio));
+        if(t.getEstado().equals("Pendiente de pago")) return (t.isPagoRevision()||(t.getVencePago()!=null&&ahora.isBefore(t.getVencePago())))&&(inicio==null||ahora.isBefore(inicio));
+        return confirmada(t)||t.getEstado().equals("Incidencia");
     }
-
-    public static void validarCambio(Tutoria tutoria, EstadoTutoria siguiente, Rol rol, LocalDateTime ahora) {
-        String error = errorCambio(tutoria, siguiente, rol, ahora);
-        if (error != null) throw new IllegalArgumentException(error);
-    }
-
-    private static String errorCambio(Tutoria tutoria, EstadoTutoria siguiente, Rol rol, LocalDateTime ahora) {
-        if (!EstadoTutoria.desdeValor(tutoria.getEstado()).puedeCambiarA(siguiente)) {
-            return "El estado de esta tutoría ya no permite esa acción. Actualiza la página.";
-        }
-        if (rol == null || (rol != Rol.DOCENTE && siguiente != EstadoTutoria.CANCELADA)) {
-            return "Tu rol no permite realizar esta acción.";
-        }
-        LocalDateTime inicio = inicio(tutoria);
-        if (siguiente == EstadoTutoria.ACEPTADA) {
-            try { validarHorario(tutoria, ahora); }
-            catch (IllegalArgumentException exception) { return exception.getMessage(); }
-        }
-        if (siguiente == EstadoTutoria.COMPLETADA && (inicio == null
-                || ahora.isBefore(inicio.plusMinutes(tutoria.getDuracionMinutos())))) {
-            return "Solo puedes completar una tutoría aceptada después de su hora de finalización.";
-        }
-        if (siguiente == EstadoTutoria.CANCELADA && rol != Rol.ADMIN && inicio != null && !inicio.isAfter(ahora)) {
-            return "La tutoría ya comenzó. Contacta al administrador si necesitas cancelarla.";
-        }
-        return null;
+    public static boolean puedeEntrar(Tutoria t,LocalDateTime ahora) {
+        LocalDateTime a=inicio(t);return confirmada(t)&&a!=null&&ahora.isBefore(a.plusMinutes(t.getDuracionMinutos()))&&!t.getEnlaceClase().isBlank();
     }
 }

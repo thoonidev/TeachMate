@@ -11,6 +11,12 @@ public class Docente {
 	private String telefono;
 	private String clave;
 	private boolean activo = true;
+    private String presentacion = "";
+    private String niveles = "";
+    public String getPresentacion() { return presentacion; }
+    public void setPresentacion(String value) { presentacion = value == null ? "" : value; }
+    public String getNiveles() { return niveles; }
+    public void setNiveles(String value) { niveles = value == null ? "" : value; }
 	
 	
 	public Docente() {

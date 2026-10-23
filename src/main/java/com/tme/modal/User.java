@@ -5,6 +5,9 @@ public class User {
 	private String nombre;
 	private String email;
 	private String clave;
+    private String telefono = "";
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String value) { telefono = value == null ? "" : value; }
 	
 	
 	public User() {

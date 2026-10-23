@@ -1,9 +1,7 @@
 <%@page import="com.tme.modal.Docente"%>
 <%@page import="com.tme.dao.DocenteDAO"%>
-<%@page import="com.tme.modal.Especialidad"%>
 <%@page import="java.util.List"%>
 <%@page import="com.tme.db.DBConnection"%>
-<%@page import="com.tme.dao.EspecialidadDAO"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 
@@ -15,7 +13,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Agregar | Docente</title>
+<title>Registrar profesor | TeachMate</title>
 
 <%@include file="../component/allcss.jsp"%>
 
@@ -27,7 +25,7 @@
 
 	<div class="container-fluid p-3">
 		<div class="row">
-			<div class="col-md-5 offset-4">
+			<div class="col-12 col-lg-8 col-xl-6 mx-auto">
 				<div class="card my-card">
 					<div class="card-body">
 						<h1 class="tm-page-title">Agregar Profesor</h1>
@@ -47,30 +45,12 @@
 
 							</div>
 							<div class="mb-3">
-								<label for="tm-calificacion-3" class="form-label">Calificación</label> <input id="tm-calificacion-3"
+								<label for="tm-calificacion-3" class="form-label">Formación</label> <input id="tm-calificacion-3"
 									name="calificacion" type="text"
 									placeholder="Ingrese calificacion" class="form-control">
 							</div>
 
-							<div class="mb-3">
-								<label for="tm-especialidad-4" class="form-label">Especialidad</label> <select id="tm-especialidad-4"
-									class="form-control" name="especialidad">
-									<option disabled="disabled" selected="selected">---Select---</option>
-
-									<%
-									EspecialidadDAO espDAO = new EspecialidadDAO(DBConnection.getConn());
-									List<Especialidad> espList = espDAO.getAllEspecialidad();
-									for (Especialidad esp : espList) {
-									%>
-									<option>
-										<%=com.tme.security.Html.escape(esp.getEspecialidadNombre())%>
-									</option>
-									<%
-									}
-									%>
-
-								</select>
-							</div>
+							<div class="mb-3"><label for="presentacion" class="form-label">Presentación pública</label><textarea id="presentacion" name="presentacion" class="form-control" maxlength="1000" rows="4"></textarea></div><div class="mb-3"><label for="niveles" class="form-label">Niveles que atiende</label><input id="niveles" name="niveles" class="form-control" maxlength="150" placeholder="Por ejemplo: secundaria, preuniversitario" value=""></div><p class="form-text">Los cursos se asignan desde la gestión de profesores.</p>
 
 							<div class="mb-3">
 								<label for="tm-email-5" class="form-label">Correo electrónico</label> <input id="tm-email-5"
@@ -85,12 +65,12 @@
 
 							</div>
 							<div class="mb-3">
-								<label for="tm-clave-7" class="form-label">Clave</label> <input id="tm-clave-7"
+								<label for="tm-clave-7" class="form-label">Contraseña</label> <input id="tm-clave-7"
 									name="clave" maxlength="128" minlength="12" autocomplete="new-password" type="password" placeholder="Ingrese clave"
 									class="form-control">
 							</div>
 
-							<button type="submit" class="btn btn-primary btn-dark text-white col-md-12">Registrar</button>
+							<button type="submit" class="btn btn-primary text-white col-md-12">Registrar</button>
 						</form>
 
 					</div>

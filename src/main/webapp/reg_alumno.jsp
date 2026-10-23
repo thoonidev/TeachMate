@@ -26,7 +26,7 @@
 				<div class="card my-card">
 					<div class="card-header"><h1>Crea tu cuenta</h1></div>
 					<div class="card-body">
-<p class="tm-auth-note">Empieza a organizar tus tutorías desde un solo lugar.</p>
+<p class="tm-auth-note">Empieza a organizar tus asesorías desde un solo lugar.</p>
 
 						<form action="user_register" method="post">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
@@ -40,11 +40,10 @@
 								<label for="tm-email-2" class="form-label">Correo electrónico</label> <input id="tm-email-2"
 									name="email" type="email" autocomplete="username" maxlength="45" required placeholder="Ingrese correo electronico"
 									class="form-control">
-								<div id="emailHelp" class="form-text">Nunca compartiremos
-									tu email con cualquier otra persona.</div>
+								<div class="form-text">Usa un correo al que tengas acceso.</div>
 							</div>
 							<div class="mb-3">
-								<label for="tm-clave-3" class="form-label">Clave</label> <input id="tm-clave-3"
+								<label for="tm-clave-3" class="form-label">Contraseña</label> <input id="tm-clave-3"
 									name="clave" maxlength="128" minlength="12" autocomplete="new-password" type="password" required placeholder="Ingrese clave"
 									class="form-control">
 							</div>

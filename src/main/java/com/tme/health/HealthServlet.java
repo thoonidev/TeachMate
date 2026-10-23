@@ -19,13 +19,24 @@ public class HealthServlet extends HttpServlet {
         response.setHeader("Cache-Control", "no-store");
         try {
             Connection connection = DBConnection.getConn();
-            // Check the schema too: an empty database must not be declared ready.
-            for (String sql : new String[] {"select id from user_details limit 1", "select id,activo from docente limit 1",
-                    "select id from especialidad limit 1", "select id,estado,comentario,hora_inicio,duracion_minutos from tutoria limit 1"}) {
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setQueryTimeout(2);
-                    try (ResultSet result = statement.executeQuery()) { result.next(); }
-                }
+            // One round trip validates all required tables/columns, without scanning customer data.
+            String sql = "select u.id,u.telefono,d.activo,d.presentacion,d.niveles,e.descripcion,e.activo,"
+                    + "t.estado,t.comentario,t.hora_inicio,t.duracion_minutos,t.curso_id,t.tarifa_id,t.precio,t.porcentaje_docente,"
+                    + "t.nivel,t.vence_respuesta,t.vence_pago,t.enlace_clase,t.asistencia,t.cancelacion_solicitada,t.pago_revision,t.cobro_medio,t.plazo_correccion_minutos,"
+                    + "dc.curso_id,tc.precio,tc.porcentaje_docente,di.fecha,di.hora_desde,di.hora_hasta,cr.respuesta_minutos,cr.pago_minutos,cr.antelacion_minutos,"
+                    + "ce.accion,ca.version,cp.medio,cp.correccion_minutos,p.estado,p.version,pc.mime,pc.huella,pi.tipo,pi.clave,pe.accion,pd.importe,pd.ejecutada_en,"
+                    + "cl.corte_dia,cl.pago_dia,l.total,l.estado,ll.importe,ls.liquidacion_id,la.estado,la.importe,laa.liquidacion_id,le.ajuste_id "
+                    + "from user_details u left join docente d on 1=0 left join especialidad e on 1=0 left join tutoria t on 1=0 "
+                    + "left join docente_curso dc on 1=0 left join tarifa_curso tc on 1=0 left join disponibilidad di on 1=0 "
+                    + "left join configuracion_reservas cr on 1=0 left join tutoria_evento ce on 1=0 left join tutoria_cambio ca on 1=0 "
+                    + "left join configuracion_pagos cp on 1=0 left join pago_alumno p on 1=0 left join pago_comprobante pc on 1=0 "
+                    + "left join pago_identificador pi on 1=0 left join pago_evento pe on 1=0 left join pago_devolucion pd on 1=0 "
+                    + "left join configuracion_liquidaciones cl on 1=0 left join liquidacion l on 1=0 left join liquidacion_linea ll on 1=0 "
+                    + "left join liquidacion_sesion ls on 1=0 left join liquidacion_ajuste la on 1=0 "
+                    + "left join liquidacion_ajuste_asignacion laa on 1=0 left join liquidacion_evento le on 1=0 where 1=0";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setQueryTimeout(3);
+                try (ResultSet result = statement.executeQuery()) { result.next(); }
             }
             response.getWriter().write("{\"status\":\"ok\"}");
         } catch (SQLException | IllegalStateException exception) {

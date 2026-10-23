@@ -11,9 +11,9 @@ public class DocenteDAO {
     public DocenteDAO(Connection conn) { this.conn = conn; }
 
     public boolean registerDocente(Docente docente) {
-        try (PreparedStatement statement = conn.prepareStatement("insert into docente(nombre,fnacim,calificacion,especialidad,email,telefono,clave) values(?,?,?,?,?,?,?)")) {
+        try (PreparedStatement statement = conn.prepareStatement("insert into docente(nombre,fnacim,calificacion,email,telefono,presentacion,niveles,clave) values(?,?,?,?,?,?,?,?)")) {
             profile(statement, docente);
-            statement.setString(7, Passwords.hash(docente.getClave()));
+            statement.setString(8, Passwords.hash(docente.getClave()));
             return statement.executeUpdate() == 1;
         } catch (SQLException exception) { throw failure(); }
     }
@@ -22,7 +22,7 @@ public class DocenteDAO {
     public List<Docente> getActiveDocentes() { return list(true); }
     private List<Docente> list(boolean activeOnly) {
         List<Docente> list = new ArrayList<>();
-        String sql = "select * from docente" + (activeOnly ? " where activo=true" : "") + " order by id desc";
+        String sql = "select d.*, coalesce((select group_concat(e.especialidad_nombre order by e.especialidad_nombre separator ', ') from docente_curso dc join especialidad e on e.id=dc.curso_id where dc.docente_id=d.id),'') as especialidad from docente d" + (activeOnly ? " where activo=true" : "") + " order by id desc";
         try (PreparedStatement statement = conn.prepareStatement(sql); ResultSet result = statement.executeQuery()) {
             while (result.next()) list.add(read(result));
             return list;
@@ -30,7 +30,7 @@ public class DocenteDAO {
     }
 
     public Docente getDocenteById(int id) {
-        try (PreparedStatement statement = conn.prepareStatement("select * from docente where id=?")) {
+        try (PreparedStatement statement = conn.prepareStatement("select d.*, coalesce((select group_concat(e.especialidad_nombre order by e.especialidad_nombre separator ', ') from docente_curso dc join especialidad e on e.id=dc.curso_id where dc.docente_id=d.id),'') as especialidad from docente d where id=?")) {
             statement.setInt(1, id);
             try (ResultSet result = statement.executeQuery()) { return result.next() ? read(result) : null; }
         } catch (SQLException exception) { throw failure(); }
@@ -45,12 +45,12 @@ public class DocenteDAO {
 
     public boolean updateDocente(Docente docente) {
         boolean reset = docente.getClave() != null && !docente.getClave().isEmpty();
-        String sql = "update docente set nombre=?,fnacim=?,calificacion=?,especialidad=?,email=?,telefono=?"
+        String sql = "update docente set nombre=?,fnacim=?,calificacion=?,email=?,telefono=?,presentacion=?,niveles=?"
                 + (reset ? ",clave=?" : "") + " where id=?";
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             profile(statement, docente);
-            if (reset) statement.setString(7, Passwords.hash(docente.getClave()));
-            statement.setInt(reset ? 8 : 7, docente.getId());
+            if (reset) statement.setString(8, Passwords.hash(docente.getClave()));
+            statement.setInt(reset ? 9 : 8, docente.getId());
             return statement.executeUpdate() == 1;
         } catch (SQLException exception) { throw failure(); }
     }
@@ -70,7 +70,7 @@ public class DocenteDAO {
     }
 
     public Docente loginDocente(String email, String password) {
-        try (PreparedStatement statement = conn.prepareStatement("select * from docente where email=? and activo=true")) {
+        try (PreparedStatement statement = conn.prepareStatement("select d.*, coalesce((select group_concat(e.especialidad_nombre order by e.especialidad_nombre separator ', ') from docente_curso dc join especialidad e on e.id=dc.curso_id where dc.docente_id=d.id),'') as especialidad from docente d where email=? and activo=true")) {
             statement.setString(1, email);
             try (ResultSet result = statement.executeQuery()) {
                 return result.next() && Passwords.verify(password, result.getString("clave")) ? read(result) : null;
@@ -107,9 +107,9 @@ public class DocenteDAO {
     }
 
     public boolean editDocenteProfile(Docente docente) {
-        try (PreparedStatement statement = conn.prepareStatement("update docente set nombre=?,fnacim=?,calificacion=?,especialidad=?,email=?,telefono=? where id=? and activo=true")) {
+        try (PreparedStatement statement = conn.prepareStatement("update docente set nombre=?,fnacim=?,calificacion=?,email=?,telefono=?,presentacion=?,niveles=? where id=? and activo=true")) {
             profile(statement, docente);
-            statement.setInt(7, docente.getId());
+            statement.setInt(8, docente.getId());
             return statement.executeUpdate() == 1;
         } catch (SQLException exception) { throw failure(); }
     }
@@ -118,14 +118,17 @@ public class DocenteDAO {
         statement.setString(1, docente.getNombre());
         statement.setString(2, docente.getFnacim());
         statement.setString(3, docente.getCalificacion());
-        statement.setString(4, docente.getEspecialidad());
-        statement.setString(5, docente.getEmail());
-        statement.setString(6, docente.getTelefono());
+        statement.setString(4, docente.getEmail());
+        statement.setString(5, docente.getTelefono());
+        statement.setString(6, docente.getPresentacion());
+        statement.setString(7, docente.getNiveles());
     }
     private Docente read(ResultSet result) throws SQLException {
         Docente docente = new Docente(result.getInt("id"), result.getString("nombre"), result.getString("fnacim"),
                 result.getString("calificacion"), result.getString("especialidad"), result.getString("email"), result.getString("telefono"), null);
         docente.setActivo(result.getBoolean("activo"));
+        docente.setPresentacion(result.getString("presentacion"));
+        docente.setNiveles(result.getString("niveles"));
         return docente;
     }
     private IllegalStateException failure() { return new IllegalStateException("No se pudo completar la operación de docentes."); }

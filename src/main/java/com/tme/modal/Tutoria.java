@@ -180,6 +180,46 @@ public class Tutoria {
 		this.estado = EstadoTutoria.desdeValor(estado);
 	}
 
+    private String nivel="", enlaceClase="", asistencia="", motivoCancelacion="";
+    private java.time.LocalDateTime creadaEn, venceRespuesta, vencePago;
+    private Integer plazoPagoMinutos;
+    private boolean cancelacionSolicitada;
+    private boolean pagoRevision;
+    public boolean isPagoRevision(){return pagoRevision;}
+    public void setPagoRevision(boolean v){pagoRevision=v;}
+    public String getNivel(){return nivel;}
+    public void setNivel(String v){nivel=v==null?"":v;}
+    public String getEnlaceClase(){return enlaceClase;}
+    public void setEnlaceClase(String v){enlaceClase=v==null?"":v;}
+    public String getAsistencia(){return asistencia;}
+    public void setAsistencia(String v){asistencia=v==null?"":v;}
+    public String getMotivoCancelacion(){return motivoCancelacion;}
+    public void setMotivoCancelacion(String v){motivoCancelacion=v==null?"":v;}
+    public boolean isCancelacionSolicitada(){return cancelacionSolicitada;}
+    public void setCancelacionSolicitada(boolean v){cancelacionSolicitada=v;}
+    public java.time.LocalDateTime getCreadaEn(){return creadaEn;}
+    public void setCreadaEn(java.time.LocalDateTime v){creadaEn=v;}
+    public java.time.LocalDateTime getVenceRespuesta(){return venceRespuesta;}
+    public void setVenceRespuesta(java.time.LocalDateTime v){venceRespuesta=v;}
+    public java.time.LocalDateTime getVencePago(){return vencePago;}
+    public void setVencePago(java.time.LocalDateTime v){vencePago=v;}
+    public Integer getPlazoPagoMinutos(){return plazoPagoMinutos;}
+    public void setPlazoPagoMinutos(Integer v){plazoPagoMinutos=v;}
+    private Integer cursoId;
+    private Integer tarifaId;
+    private String cursoNombre;
+    private java.math.BigDecimal precio;
+    private java.math.BigDecimal porcentajeDocente;
+    public Integer getCursoId() { return cursoId; }
+    public void setCursoId(Integer value) { cursoId = value; }
+    public Integer getTarifaId() { return tarifaId; }
+    public void setTarifaId(Integer value) { tarifaId = value; }
+    public String getCursoNombre() { return cursoNombre; }
+    public void setCursoNombre(String value) { cursoNombre = value; }
+    public java.math.BigDecimal getPrecio() { return precio; }
+    public void setPrecio(java.math.BigDecimal value) { precio = value; }
+    public java.math.BigDecimal getPorcentajeDocente() { return porcentajeDocente; }
+    public void setPorcentajeDocente(java.math.BigDecimal value) { porcentajeDocente = value; }
     public String getComentario() { return comentario; }
     public String getNombreDocente() { return nombreDocente; }
     public void setNombreDocente(String nombreDocente) { this.nombreDocente = nombreDocente; }

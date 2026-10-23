@@ -10,48 +10,35 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 
 /** Requests and workflow actions share the same business rules and error handling. */
-@WebServlet({"/addTutoria", "/cambiarEstadoTutoria", "/cancelarTutoria", "/adminCancelarTutoria"})
+@WebServlet("/addTutoria")
 public class TutoriaServlet extends HttpServlet {
     @Override protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String path = request.getServletPath();
-        String destino = switch (path) {
-            case "/cambiarEstadoTutoria" -> "/docente/alumno.jsp";
-            case "/cancelarTutoria" -> "/list_tutoria.jsp";
-            case "/adminCancelarTutoria" -> "/admin/alumno.jsp";
-            default -> "/reg_tutoria.jsp";
-        };
+        String destino="/reg_tutoria.jsp";
         HttpSession session = request.getSession(false);
         try {
             TutoriaDAO dao = new TutoriaDAO(DBConnection.getConn());
-            if (path.equals("/addTutoria")) {
-                int userId = ((User) session.getAttribute("userObj")).getId();
-                Tutoria tutoria = new Tutoria(userId, request.getParameter("nombre"), request.getParameter("genero"),
-                        request.getParameter("edad"), request.getParameter("ftutoria"), request.getParameter("email"),
-                        request.getParameter("telefono"), request.getParameter("experiencia"),
-                        Integer.parseInt(request.getParameter("docenteNameSelect")), request.getParameter("direccion"), "Pendiente");
+            {
+                User alumno = new com.tme.dao.UserDAO(DBConnection.getConn()).getById(((User) session.getAttribute("userObj")).getId());
+                if (alumno.getTelefono().isBlank()) throw new IllegalArgumentException("Completa tu teléfono en Mi perfil antes de solicitar.");
+                Tutoria tutoria = new Tutoria(alumno.getId(), alumno.getNombre(), "", "", request.getParameter("ftutoria"),
+                        alumno.getEmail(), alumno.getTelefono(), request.getParameter("experiencia"),
+                        Integer.parseInt(request.getParameter("docenteNameSelect")), "", "Pendiente");
                 tutoria.setHoraInicio(LocalTime.parse(request.getParameter("horaInicio")));
                 tutoria.setDuracionMinutos(Integer.parseInt(request.getParameter("duracionMinutos")));
+                tutoria.setNivel(request.getParameter("nivel"));
+                tutoria.setCursoId(Integer.parseInt(request.getParameter("cursoId")));
+                tutoria.setTarifaId(Integer.parseInt(request.getParameter("tarifaId")));
                 if (!dao.addTutoria(tutoria)) throw new IllegalArgumentException("El docente seleccionado ya no está disponible. Elige otro docente.");
                 session.setAttribute("successMsg", "Solicitud registrada. El horario queda reservado mientras el docente la revisa.");
                 session.removeAttribute("tutoriaForm");
-                destino = "/list_tutoria.jsp";
-            } else {
-                Rol rol = path.equals("/cambiarEstadoTutoria") ? Rol.DOCENTE
-                        : path.equals("/cancelarTutoria") ? Rol.ALUMNO : Rol.ADMIN;
-                int actorId = rol == Rol.DOCENTE ? ((Docente) session.getAttribute("docenteObj")).getId()
-                        : rol == Rol.ALUMNO ? ((User) session.getAttribute("userObj")).getId() : 0;
-                EstadoTutoria estado = rol == Rol.DOCENTE ? EstadoTutoria.desdeValor(request.getParameter("estado")) : EstadoTutoria.CANCELADA;
-                if (!dao.cambiarEstado(Integer.parseInt(request.getParameter("id")), actorId, rol, estado)) {
-                    response.sendError(404); return;
-                }
-                session.setAttribute("successMsg", "Estado de la tutoría actualizado: " + estado.getValor() + ".");
+                session.removeAttribute("reservaRetorno");
+                destino = "/asesoria.jsp?id="+tutoria.getId();
             }
         } catch (IllegalArgumentException exception) {
             session.setAttribute("errorMsg", exception.getMessage());
-            if (path.equals("/addTutoria")) {
+            {
                 java.util.Map<String, String> datos = new java.util.HashMap<>();
-                for (String campo : java.util.List.of("nombre", "genero", "edad", "ftutoria", "email", "telefono",
-                        "experiencia", "docenteNameSelect", "direccion", "horaInicio", "duracionMinutos")) {
+                for (String campo : java.util.List.of("cursoId", "tarifaId", "docenteNameSelect", "ftutoria", "experiencia", "horaInicio", "duracionMinutos", "nivel")) {
                     datos.put(campo, request.getParameter(campo));
                 }
                 session.setAttribute("tutoriaForm", datos);
