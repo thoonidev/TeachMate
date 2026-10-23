@@ -24,11 +24,12 @@ public class PasswordsTest {
         assertEquals("", Html.escape(null));
     }
     @Test public void rolesCoverPagesAndStandaloneActions() {
-        for (String path : new String[] {"/admin/", "/admin/alumno.jsp", "/deleteDocente", "/addEspecialidad", "/updateDocente"})
+        for (String path : new String[] {"/admin/", "/admin/alumno.jsp", "/deactivateDocente", "/reactivateDocente", "/addEspecialidad", "/updateDocente", "/adminCancelarTutoria"})
             assertEquals("adminObj", SecurityFilter.requiredRole(path));
-        for (String path : new String[] {"/docente/comentario.jsp", "/updateEstado", "/docenteChangePassword"})
+        for (String path : new String[] {"/docente/comentario.jsp", "/updateComentario", "/docenteChangePassword", "/cambiarEstadoTutoria"})
             assertEquals("docenteObj", SecurityFilter.requiredRole(path));
         assertEquals("userObj", SecurityFilter.requiredRole("/userChangePassword"));
+        assertEquals("userObj", SecurityFilter.requiredRole("/cancelarTutoria"));
         assertNull(SecurityFilter.requiredRole("/admin_login.jsp"));
     }
     @Test public void csrfRequiresMatchingSessionToken() {

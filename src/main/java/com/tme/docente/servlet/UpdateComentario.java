@@ -12,8 +12,8 @@ import javax.servlet.http.HttpSession;
 import com.tme.dao.TutoriaDAO;
 import com.tme.db.DBConnection;
 
-@WebServlet("/updateEstado")
-public class UpdateEstado extends HttpServlet{
+@WebServlet("/updateComentario")
+public class UpdateComentario extends HttpServlet{
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -25,13 +25,13 @@ public class UpdateEstado extends HttpServlet{
 		 String comentario = req.getParameter("comentario");
 		 
 		 TutoriaDAO tutDAO = new TutoriaDAO(DBConnection.getConn());
-		 boolean f = tutDAO.updatePfTutoriaComentarioEstado(id, docenteId, comentario);
+		 boolean f = tutDAO.updateComentario(id, docenteId, comentario);
 		 
 		 HttpSession session = req.getSession();
 		 
 		 
 		 if(f == true) {
-			 session.setAttribute("successMsg", "Comentario actulizado");
+			 session.setAttribute("successMsg", "Comentario actualizado");
 			 resp.sendRedirect("docente/alumno.jsp");
 			 
 		 }else {

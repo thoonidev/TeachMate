@@ -20,8 +20,9 @@ public class HealthServlet extends HttpServlet {
         try {
             Connection connection = DBConnection.getConn();
             // Check the schema too: an empty database must not be declared ready.
-            for (String table : new String[] {"user_details", "docente", "especialidad", "tutoria"}) {
-                try (PreparedStatement statement = connection.prepareStatement("select id from " + table + " limit 1")) {
+            for (String sql : new String[] {"select id from user_details limit 1", "select id,activo from docente limit 1",
+                    "select id from especialidad limit 1", "select id,estado,comentario,hora_inicio,duracion_minutos from tutoria limit 1"}) {
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
                     statement.setQueryTimeout(2);
                     try (ResultSet result = statement.executeQuery()) { result.next(); }
                 }

@@ -1,99 +1,53 @@
-<%@page import="com.tme.modal.Docente"%>
-<%@page import="com.tme.db.DBConnection"%>
-<%@page import="com.tme.dao.DocenteDAO"%>
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-	pageEncoding="UTF-8"%>
-
-
-<!-- for jstl tag -->
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<!-- end of jstl tag -->
-
-<%@page isELIgnored="false"%>
-
-<!DOCTYPE html>
-<html>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="com.tme.dao.TutoriaDAO,com.tme.db.DBConnection,com.tme.modal.Docente,com.tme.modal.Tutoria,com.tme.service.ReglasTutoria,com.tme.service.ReglasTutoria.Rol" %>
+<!doctype html>
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Vista Docente</title>
-<%@include file="../component/allcss.jsp"%>
-
-
-<!-- CSS personalizado para esta página. -->
-<style type="text/css">
-.my-card {
-	box-shadow: 0px 0px 10px 1px rgba(137, 184, 255);
-	/*box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.3);*/
-}
-</style>
-<!-- Fin del CSS personalizado para esta página. -->
-
-
-
+    <meta charset="UTF-8">
+    <title>Mi panel docente | TeachMate</title>
+    <%@ include file="../component/allcss.jsp" %>
 </head>
 <body>
-	<%@include file="navbar.jsp"%>
-
-
-	<!-- compruebe si el docente ha iniciado sesión o no, si inicia sesión, solo él podrá acceder al panel de docentes -->
-	<!-- de lo contrario redirigirlo a la página de inicio de sesión del docente para iniciar sesión -->
-	<!-- si "docenteObj" está vacío significa que nadie ha iniciado sesión. -->
-
-	<c:if test="${empty docenteObj }">
-
-		<c:redirect url="../docente_login.jsp"></c:redirect>
-
-	</c:if>
-
-	<!-- Comprobar si el docente está conectado o no -->
-
-
-	<div class="container p-5">
-		<p class="text-center text-primary fs-3">Panel Docente</p>
-
-		<%
-		
-		
-		DocenteDAO docDAO = new DocenteDAO(DBConnection.getConn());
-		int totalNumberOfDocente = docDAO.countTotalDocente();
-		
-		//obtiene el objeto docente de inicio de sesión actual de la sesión
-		Docente currentLoginDocente = (Docente)session.getAttribute("docenteObj");
-		
-		
-		%>
-
-		<div class="row">
-			<div class="col-md-4 offset-md-2">
-				<div class="card my-card">
-					<div class="card-body text-center text-primary">
-						<i class="fa-solid fa-chalkboard-user fa-3x"></i><br>
-						<p class="fs-4 text-center">
-							Profesor <br><%=com.tme.security.Html.escape(totalNumberOfDocente)%>
-						</p>
-					</div>
-				</div>
-
-			</div>
-
-			<div class="col-md-4">
-				<div class="card my-card">
-					<div class="card-body text-center text-primary">
-						<i class="fa-solid fa-calendar-check fa-3x"></i><br>
-						<p class="fs-4 text-center">
-							Tutoria total <br> <%=com.tme.security.Html.escape(docDAO.countTotalTutoriaByDocenteId(currentLoginDocente.getId()))%>
-						</p>
-					</div>
-				</div>
-
-			</div>
-		</div>
-
-
-	</div>
-
-
-
-
+    <%@ include file="../component/navbar.jsp" %>
+    <main id="contenido" class="tm-main" tabindex="-1">
+        <%@ include file="../component/messages.jsp" %>
+        <%
+            Docente panelDocente = (Docente) session.getAttribute("docenteObj");
+            TutoriaDAO dao = new TutoriaDAO(DBConnection.getConn());
+            TutoriaDAO.Resumen resumen = dao.resumen(Rol.DOCENTE, panelDocente.getId());
+            Tutoria proxima = dao.proxima(Rol.DOCENTE, panelDocente.getId());
+        %>
+        <div class="container p-3">
+            <div class="tm-page-heading">
+                <div><p class="tm-eyebrow">Tu espacio docente</p>
+                    <h1 class="tm-page-title">Hola, <c:out value="${docenteObj.nombre}" /></h1>
+                    <p class="text-muted">Estas son tus solicitudes y sesiones. Los datos corresponden únicamente a tus tutorías.</p>
+                </div>
+                <a class="btn btn-primary" href="alumno.jsp">Gestionar mis tutorías</a>
+            </div>
+            <div class="tm-metrics">
+                <a class="tm-metric" href="alumno.jsp?estado=Pendiente"><span>Por revisar</span><strong><%=resumen.pendientes()%></strong><small>Acepta o rechaza las solicitudes</small></a>
+                <a class="tm-metric" href="alumno.jsp?estado=Aceptada"><span>Aceptadas</span><strong><%=resumen.aceptadas()%></strong><small>Consulta las sesiones confirmadas</small></a>
+                <a class="tm-metric" href="alumno.jsp?estado=Completada"><span>Completadas</span><strong><%=resumen.completadas()%></strong><small>Revisa tu seguimiento anterior</small></a>
+                <a class="tm-metric" href="alumno.jsp"><span>Total</span><strong><%=resumen.total()%></strong><small>Todo tu historial</small></a>
+            </div>
+            <section class="tm-next-session">
+                <div><h2>Tu próxima sesión confirmada</h2>
+                    <% if (proxima == null) { %>
+                        <p>No tienes sesiones confirmadas próximas. Revisa tus solicitudes pendientes para organizar tu agenda.</p>
+                    <% } else { %>
+                        <p><strong><%=com.tme.security.Html.escape(proxima.getNombre())%></strong> · <%=com.tme.security.Html.escape(proxima.getFtutoria())%> · <%=com.tme.security.Html.escape(proxima.getHorario())%> (Lima)</p>
+                        <p>Tema: <%=com.tme.security.Html.escape(proxima.getExperiencia())%></p>
+                    <% } %>
+                </div>
+                <a class="btn btn-outline-primary" href="alumno.jsp?estado=Aceptada">Ver sesiones</a>
+            </section>
+            <div class="tm-role-guide">
+                <section class="card"><div class="card-body"><h2 class="tm-section-title">Organiza tus solicitudes</h2><p>Confirma o rechaza cada solicitud antes del inicio. Los horarios pendientes ya están reservados para evitar cruces.</p><a href="alumno.jsp?estado=Pendiente">Revisar pendientes →</a></div></section>
+                <section class="card"><div class="card-body"><h2 class="tm-section-title">Da seguimiento al aprendizaje</h2><p>Registra comentarios desde Mis tutorías. Cuando termine una sesión aceptada, podrás marcarla como completada.</p><a href="edit_profile.jsp">Mi perfil y contraseña →</a></div></section>
+            </div>
+        </div>
+    </main>
+    <%@ include file="../component/footer.jsp" %>
 </body>
 </html>

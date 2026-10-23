@@ -5,6 +5,7 @@ COPY pom.xml ./
 COPY src ./src
 # Used by the isolated integration tests; no production database is accessed.
 COPY database/schema.sql ./database/schema.sql
+COPY database/tutorias-migration.sql ./database/tutorias-migration.sql
 COPY deploy/tomcat/server.xml ./deploy/tomcat/server.xml
 RUN mvn --batch-mode --no-transfer-progress clean package
 
