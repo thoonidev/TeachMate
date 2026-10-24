@@ -1,9 +1,7 @@
 <%@page import="com.tme.modal.Docente"%>
 <%@page import="com.tme.dao.DocenteDAO"%>
-<%@page import="com.tme.modal.Especialidad"%>
 <%@page import="java.util.List"%>
 <%@page import="com.tme.db.DBConnection"%>
-<%@page import="com.tme.dao.EspecialidadDAO"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 
@@ -15,7 +13,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Lista | Docente</title>
+<title>Profesores | TeachMate</title>
 
 <%@include file="../component/allcss.jsp"%>
 
@@ -31,9 +29,9 @@
 			<div class="col-md-12">
 				<div class="card my-card">
 					<div class="card-body">
-						<h1 class="tm-page-title">Docentes</h1>
-                        <p class="text-muted">Desactivar conserva el historial. Revisa sus solicitudes abiertas antes de desactivarlo; al reactivarlo no se reabren las tutorías canceladas.</p>
-                        <a class="btn btn-primary mb-4" href="docente.jsp">Registrar docente</a>
+						<h1 class="tm-page-title">Profesores</h1>
+                        <p class="text-muted">Desactivar conserva el historial. Revisa sus solicitudes abiertas antes de desactivarlo; al reactivarlo no se reabren las asesorías canceladas.</p>
+                        <a class="btn btn-primary mb-4" href="docente.jsp">Registrar profesor</a>
 
 						<div class="table-responsive" role="region" aria-label="Docentes registrados. Desliza para ver todas las columnas." tabindex="0">
 <table class="table table-striped">
@@ -42,9 +40,9 @@
 								<tr>
 
 									<th scope="col">Nombres</th>
-									<th scope="col">FNacim</th>
-									<th scope="col">Calificacion</th>
-									<th scope="col">Especialidad</th>
+									<th scope="col">Nacimiento</th>
+									<th scope="col">Formación</th>
+									<th scope="col">Cursos</th>
 									<th scope="col">Correo electrónico</th>
 									<th scope="col">Teléfono</th>
                                     <th scope="col">Estado</th>
@@ -57,7 +55,7 @@
 								DocenteDAO docDAO2 = new DocenteDAO(DBConnection.getConn());
                                 List<Docente> listOfDoc = docDAO2.getAllDocente();
                                 if (listOfDoc.isEmpty()) { %>
-                                    <tr><td colspan="9"><div class="tm-empty">Todavía no hay docentes registrados. Usa Registrar docente para añadir el primero.</div></td></tr>
+                                    <tr><td colspan="9"><div class="tm-empty">Todavía no hay docentes registrados. Usa Registrar profesor para añadir el primero.</div></td></tr>
                                 <% }
 								for (Docente docenteLst : listOfDoc) {
 								%>
@@ -72,7 +70,7 @@
                                     <td><span class="tm-status <%=docenteLst.isActivo() ? "tm-status-activo" : "tm-status-inactivo"%>"><%=docenteLst.isActivo() ? "Activo" : "Inactivo"%></span></td>
 
 									<td><a class="btn btn-sm btn-primary"
-										href="edit_docente.jsp?id=<%=com.tme.security.Html.escape(docenteLst.getId())%>">Editar</a></td>
+										href="edit_docente.jsp?id=<%=com.tme.security.Html.escape(docenteLst.getId())%>">Editar perfil</a><a class="btn btn-sm btn-outline-primary" href="oferta.jsp?docenteId=<%=docenteLst.getId()%>">Cursos y horarios</a></td>
                                     <td><% if (docenteLst.isActivo()) { %>
                                         <form action="../deactivateDocente" method="post">
                                             <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">

@@ -3,10 +3,6 @@ FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /build
 COPY pom.xml ./
 COPY src ./src
-# Used by the isolated integration tests; no production database is accessed.
-COPY database/schema.sql ./database/schema.sql
-COPY database/tutorias-migration.sql ./database/tutorias-migration.sql
-COPY deploy/tomcat/server.xml ./deploy/tomcat/server.xml
 RUN mvn --batch-mode --no-transfer-progress clean package
 
 FROM tomcat:9.0.123-jdk17-temurin-noble

@@ -1,0 +1,2 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<!doctype html><html lang="es"><head><meta charset="UTF-8"><title>Liquidaciones | TeachMate</title><%@ include file="../component/allcss.jsp" %></head><body><%@ include file="../component/navbar.jsp" %><main id="contenido" class="tm-main" tabindex="-1"><%@ include file="../component/messages.jsp" %><%@ include file="../WEB-INF/panel-ingresos.jsp" %></main><%@ include file="../component/footer.jsp" %></body></html>

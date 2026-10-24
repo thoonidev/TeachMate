@@ -9,7 +9,7 @@ public record FiltroTutorias(String estado, String desde, String hasta, String b
     public static final int TAMANO = 10;
     public FiltroTutorias {
         estado = limpio(estado); desde = limpio(desde); hasta = limpio(hasta); buscar = limpio(buscar);
-        if (!estado.isEmpty()) EstadoTutoria.desdeValor(estado);
+        if (!estado.isEmpty()&&!estado.equals("Confirmadas")) EstadoTutoria.desdeValor(estado);
         try {
             if (!desde.isEmpty()) fecha(desde);
             if (!hasta.isEmpty()) fecha(hasta);

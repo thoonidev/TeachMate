@@ -28,8 +28,9 @@ public class UserLoginServlet extends HttpServlet {
 		User user = userDAO.loginUser(email, clave);
 		
 		if (user!=null) {
-			session = com.tme.security.Sessions.login(req, "userObj", user);
-			resp.sendRedirect("list_tutoria.jsp");
+			String retorno = (String) session.getAttribute("reservaRetorno");
+            session = com.tme.security.Sessions.login(req, "userObj", user);
+			resp.sendRedirect(retorno != null && retorno.matches("reg_tutoria\\.jsp\\?cursoId=[0-9]+&tarifaId=[0-9]+&docenteId=[0-9]+&fecha=[0-9-]+&hora=[0-9:]+") ? retorno : "list_tutoria.jsp");
 		}
 		else {
 			session.setAttribute("errorMsg","Usuario o contraseña inválido.");

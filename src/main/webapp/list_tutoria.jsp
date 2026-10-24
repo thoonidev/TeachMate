@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Mis tutorías | TeachMate</title>
+    <title>Mis asesorías | TeachMate</title>
     <%@ include file="component/allcss.jsp" %>
 </head>
 <body class="tm-table-page">

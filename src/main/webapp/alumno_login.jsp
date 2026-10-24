@@ -27,7 +27,7 @@
 					<div class="card-header"><h1>Acceso de alumnos</h1></div>
 
 					<div class="card-body">
-<p class="tm-auth-note">Ingresa para solicitar y consultar tus tutorías.</p>
+<p class="tm-auth-note">Ingresa para solicitar y consultar tus asesorías.</p>
 
 						<form action="userLogin" method="post">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
@@ -35,11 +35,10 @@
 								<label for="tm-email-1" class="form-label">Correo electrónico</label> <input id="tm-email-1"
 									name="email" type="email" autocomplete="username" maxlength="45" required placeholder="Ingrese correo electronico"
 									class="form-control">
-								<div id="emailHelp" class="form-text">Nunca compartiremos
-									tu email con cualquier otra persona.</div>
+
 							</div>
 							<div class="mb-3">
-								<label for="tm-clave-2" class="form-label">Clave</label> <input id="tm-clave-2"
+								<label for="tm-clave-2" class="form-label">Contraseña</label> <input id="tm-clave-2"
 									name="clave" maxlength="128" autocomplete="current-password" type="password" required placeholder="Ingrese clave"
 									class="form-control">
 							</div>
@@ -57,6 +56,7 @@
 		</div>
 	</div>
 
+<nav class="tm-auth-switch" aria-label="Otros accesos"><a href="docente_login.jsp">Soy profesor</a><a href="admin_login.jsp">Administración</a></nav>
 </main>
 <%@ include file="component/footer.jsp" %>
 </body>

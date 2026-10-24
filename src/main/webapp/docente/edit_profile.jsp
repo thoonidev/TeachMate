@@ -1,7 +1,5 @@
 <%@page import="java.util.List"%>
 <%@page import="com.tme.db.DBConnection"%>
-<%@page import="com.tme.modal.Especialidad"%>
-<%@page import="com.tme.dao.EspecialidadDAO"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 
@@ -67,7 +65,7 @@
 				<div class="card my-card">
 
 					<div class="card-body">
-						<h2 class="tm-section-title">Datos del docente</h2>
+						<h2 class="tm-section-title">Datos del profesor</h2>
 
 						<form action="../docenteEditProfile" method="post">
 <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
@@ -84,31 +82,13 @@
 
 							</div>
 							<div class="mb-3">
-								<label for="tm-calificacion-5" class="form-label">Calificación</label> <input id="tm-calificacion-5"
+								<label for="tm-calificacion-5" class="form-label">Formación</label> <input id="tm-calificacion-5"
 									name="calificacion" type="text"
 									placeholder="Ingrese calificacion" class="form-control"
 									value="<c:out value="${docenteObj.calificacion}" />">
 							</div>
 
-							<div class="mb-3">
-								<label for="tm-especialidad-6" class="form-label">Especialidad</label> <select id="tm-especialidad-6"
-									class="form-control" name="especialidad">
-									<option><c:out value="${docenteObj.especialidad}" /></option>
-
-									<%
-									EspecialidadDAO espDAO = new EspecialidadDAO(DBConnection.getConn());
-										List<Especialidad> espList = espDAO.getAllEspecialidad();
-										for (Especialidad esp : espList) {
-										%>
-									<option>
-										<%=com.tme.security.Html.escape(esp.getEspecialidadNombre())%>
-									</option>
-									<%
-										}
-										%>
-
-								</select>
-							</div>
+							<div class="mb-3"><label for="presentacion" class="form-label">Presentación pública</label><textarea id="presentacion" name="presentacion" class="form-control" maxlength="1000" rows="4"><c:out value="${docenteObj.presentacion}" /></textarea></div><div class="mb-3"><label for="niveles" class="form-label">Niveles que atiende</label><input id="niveles" name="niveles" class="form-control" maxlength="150" placeholder="Por ejemplo: secundaria, preuniversitario" value="<c:out value="${docenteObj.niveles}" />"></div><p class="form-text">Los cursos se asignan desde la gestión de profesores.</p>
 
 							<div class="mb-3">
 								<label for="tm-email-7" class="form-label">Correo electrónico</label> <input id="tm-email-7"

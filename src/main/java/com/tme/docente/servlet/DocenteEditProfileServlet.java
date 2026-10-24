@@ -25,7 +25,7 @@ public class DocenteEditProfileServlet extends HttpServlet {
 			String nombre = req.getParameter("nombre");
 			String fnacim = req.getParameter("fnacim");
 			String calificacion = req.getParameter("calificacion");
-			String especialidad = req.getParameter("especialidad");
+			String especialidad = null; // Course assignments are managed by the administrator.
 			String email = req.getParameter("email");
 			String telefono = req.getParameter("telefono");
 			//String clave = req.getParameter("clave");
@@ -35,7 +35,9 @@ public class DocenteEditProfileServlet extends HttpServlet {
 
 			Docente docente = new Docente(id, nombre, fnacim, calificacion, especialidad, email, telefono, "");
 
-			DocenteDAO docDAO = new DocenteDAO(DBConnection.getConn());
+			docente.setPresentacion(com.tme.dao.OfertaDAO.opcional(req.getParameter("presentacion"), 1000));
+            docente.setNiveles(com.tme.dao.OfertaDAO.opcional(req.getParameter("niveles"), 150));
+            DocenteDAO docDAO = new DocenteDAO(DBConnection.getConn());
 
 			boolean f = docDAO.editDocenteProfile(docente);
 
@@ -52,7 +54,10 @@ public class DocenteEditProfileServlet extends HttpServlet {
 				resp.sendRedirect("docente/edit_profile.jsp");
 			}
 
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
+            req.getSession().setAttribute("errorMsg", e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/docente/edit_profile.jsp");
+        } catch (Exception e) {
 			req.getServletContext().log("No se pudo completar la operación solicitada."); resp.sendError(500);
 		}
 

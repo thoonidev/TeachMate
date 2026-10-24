@@ -16,17 +16,26 @@ public class TutoriaDAO {
     private final Clock clock;
     public TutoriaDAO(Connection conn) { this(conn, Clock.system(ReglasTutoria.ZONA)); }
     public TutoriaDAO(Connection conn, Clock clock) { this.conn = conn; this.clock = clock; }
-    private LocalDateTime ahora() { return LocalDateTime.ofInstant(clock.instant(), ReglasTutoria.ZONA); }
+    LocalDateTime ahora() { return LocalDateTime.ofInstant(clock.instant(), ReglasTutoria.ZONA); }
 
     public boolean addTutoria(Tutoria tutoria) {
         return transaction(() -> {
             // Lock both agendas before checking availability, including when no appointments exist yet.
             if (!lockAlumno(tutoria.getUserId()) || !lockDocente(tutoria.getDocenteId())) return false;
-            ReglasTutoria.validarHorario(tutoria, ahora());
+            LocalDateTime instante=ahora();
+            ReglasTutoria.validarHorario(tutoria, instante);
+            var plazos=new ConfiguracionReservasDAO(conn).exigir(ReglasTutoria.inicio(tutoria),instante);
+            if (tutoria.getCursoId() == null || tutoria.getTarifaId() == null) throw new IllegalArgumentException("Selecciona un curso, una tarifa y un horario desde la oferta.");
+            OfertaDAO.Tarifa tarifa = new OfertaDAO(conn).validarReserva(tutoria.getDocenteId(), tutoria.getCursoId(), tutoria.getTarifaId(),
+                    java.time.LocalDate.parse(tutoria.getFtutoria()), tutoria.getHoraInicio(), tutoria.getDuracionMinutos());
+            String cursoNombre;
+            try (PreparedStatement s = conn.prepareStatement("select especialidad_nombre from especialidad where id=?")) {
+                s.setInt(1, tutoria.getCursoId()); try (ResultSet r = s.executeQuery()) { r.next(); cursoNombre=r.getString(1); }
+            }
             validarDisponibilidad(tutoria);
-            String sql = "insert into tutoria(userId,nombre,genero,edad,ftutoria,email,telefono,experiencia,docenteId,direccion,estado,hora_inicio,duracion_minutos) "
-                    + "select ?,?,?,?,?,?,?,?,?,?,?,?,? from docente where id=? and activo=true";
-            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            String sql = "insert into tutoria(userId,nombre,genero,edad,ftutoria,email,telefono,experiencia,docenteId,direccion,estado,hora_inicio,duracion_minutos,curso_id,tarifa_id,curso_nombre,precio,porcentaje_docente,nivel,creada_en,vence_respuesta,plazo_pago_minutos) "
+                    + "select ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? from docente where id=? and activo=true";
+            try (PreparedStatement statement = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)) {
                 statement.setInt(1, tutoria.getUserId());
                 statement.setString(2, tutoria.getNombre());
                 statement.setString(3, tutoria.getGenero());
@@ -40,58 +49,48 @@ public class TutoriaDAO {
                 statement.setString(11, "Pendiente");
                 statement.setTime(12, Time.valueOf(tutoria.getHoraInicio()));
                 statement.setInt(13, tutoria.getDuracionMinutos());
-                statement.setInt(14, tutoria.getDocenteId());
-                return statement.executeUpdate() == 1;
+                statement.setInt(14, tutoria.getCursoId());
+                statement.setInt(15, tarifa.id());
+                statement.setString(16, cursoNombre);
+                statement.setBigDecimal(17, tarifa.precio());
+                statement.setBigDecimal(18, tarifa.porcentaje());
+                statement.setString(19,tutoria.getNivel());
+                statement.setObject(20,instante);
+                statement.setObject(21,instante.plusMinutes(plazos.respuesta()));
+                statement.setInt(22,plazos.pago());
+                statement.setInt(23, tutoria.getDocenteId());
+                if(statement.executeUpdate()!=1)return false;
+                try(ResultSet keys=statement.getGeneratedKeys()){if(!keys.next())throw new SQLException("No se obtuvo el identificador de la asesoría.");tutoria.setId(keys.getInt(1));}
+                new ConfiguracionPagosDAO(conn).copiar(tutoria.getId());
+                GestionAsesoriasDAO.evento(conn,tutoria.getId(),"ALUMNO",tutoria.getUserId(),"Solicitud","Solicitud creada. Respuesta hasta "+instante.plusMinutes(plazos.respuesta())+" (Lima).",instante);
+                return true;
             }
         });
     }
 
-    public boolean cambiarEstado(int id, int actorId, Rol rol, EstadoTutoria siguiente) {
-        Tutoria initial = getTutoriaById(id);
-        if (initial == null || !esPropietario(initial, actorId, rol)) return false;
-        return transaction(() -> {
-            if (!lockAlumno(initial.getUserId())) return false;
-            boolean docenteActivo = lockDocente(initial.getDocenteId());
-            List<Tutoria> found = list("select * from tutoria where id=? for update", id);
-            if (found.isEmpty() || !esPropietario(found.get(0), actorId, rol)) return false;
-            Tutoria actual = found.get(0);
-            ReglasTutoria.validarCambio(actual, siguiente, rol, ahora());
-            if (siguiente == EstadoTutoria.ACEPTADA) {
-                if (!docenteActivo) throw new IllegalArgumentException("El docente ya no está disponible.");
-                validarDisponibilidad(actual);
-            }
-            try (PreparedStatement statement = conn.prepareStatement("update tutoria set estado=? where id=? and estado=?")) {
-                statement.setString(1, siguiente.getValor());
-                statement.setInt(2, id);
-                statement.setString(3, actual.getEstado());
-                return statement.executeUpdate() == 1;
-            }
-        });
-    }
-
-    private boolean esPropietario(Tutoria tutoria, int actorId, Rol rol) {
+    boolean esPropietario(Tutoria tutoria, int actorId, Rol rol) {
         return rol == Rol.ADMIN || (rol == Rol.ALUMNO && tutoria.getUserId() == actorId)
                 || (rol == Rol.DOCENTE && tutoria.getDocenteId() == actorId);
     }
 
-    private boolean lockAlumno(int id) throws SQLException {
+    boolean lockAlumno(int id) throws SQLException {
         try (PreparedStatement statement = conn.prepareStatement("select id from user_details where id=? for update")) {
             statement.setInt(1, id);
             try (ResultSet result = statement.executeQuery()) { return result.next(); }
         }
     }
 
-    private boolean lockDocente(int id) throws SQLException {
+    boolean lockDocente(int id) throws SQLException {
         try (PreparedStatement statement = conn.prepareStatement("select activo from docente where id=? for update")) {
             statement.setInt(1, id);
             try (ResultSet result = statement.executeQuery()) { return result.next() && result.getBoolean(1); }
         }
     }
 
-    private void validarDisponibilidad(Tutoria tutoria) throws SQLException {
+    void validarDisponibilidad(Tutoria tutoria) throws SQLException {
         // Agenda locks serialize competing requests; this first consistent read sees their committed work.
         // Avoid range locks here so independent agendas can still reserve concurrently on MySQL.
-        String sql = "select * from tutoria where (userId=? or docenteId=?) and estado in ('Pendiente','Aceptada') and id<>?";
+        String sql = "select * from tutoria where (userId=? or docenteId=?) and estado in ('Pendiente','Pendiente de pago','Confirmada','Aceptada','Incidencia') and id<>?";
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setInt(1, tutoria.getUserId());
             statement.setInt(2, tutoria.getDocenteId());
@@ -99,7 +98,7 @@ public class TutoriaDAO {
             try (ResultSet result = statement.executeQuery()) {
                 while (result.next()) {
                     Tutoria otra = read(result);
-                    if (ReglasTutoria.seCruzan(tutoria, otra)) {
+                    if (ReglasTutoria.vigente(otra,ahora()) && ReglasTutoria.seCruzan(tutoria, otra)) {
                         throw new IllegalArgumentException(otra.getUserId() == tutoria.getUserId()
                                 ? "Ya tienes una tutoría pendiente o aceptada en ese horario. Elige otro horario."
                                 : "El docente tiene una tutoría pendiente o aceptada en ese horario. Elige otro horario o docente.");
@@ -109,8 +108,8 @@ public class TutoriaDAO {
         }
     }
 
-    @FunctionalInterface private interface Operation { boolean run() throws SQLException; }
-    private boolean transaction(Operation operation) {
+    @FunctionalInterface interface Operation { boolean run() throws SQLException; }
+    boolean transaction(Operation operation) {
         try {
             if (!conn.getAutoCommit()) throw new IllegalStateException("La operación requiere su propia transacción.");
             conn.setAutoCommit(false);
@@ -122,7 +121,7 @@ public class TutoriaDAO {
                 conn.rollback();
                 throw exception;
             } finally { conn.setAutoCommit(true); }
-        } catch (SQLException exception) { throw failure(); }
+        } catch (SQLException exception) { throw new IllegalStateException("No se pudo completar la operación de tutorías.",exception); }
     }
 
     public List<Tutoria> getAllTutoriaByLoginUser(int userId) {
@@ -154,7 +153,7 @@ public class TutoriaDAO {
 
     public Pagina buscar(Rol rol, int actorId, FiltroTutorias filtro) {
         String where = alcance(rol, actorId)
-                + (filtro.estado().isEmpty() ? "" : " and t.estado=?")
+                + (filtro.estado().isEmpty() ? "" : filtro.estado().equals("Confirmadas")?" and t.estado in ('Confirmada','Aceptada')":" and t.estado=?")
                 + (filtro.desde().isEmpty() ? "" : " and t.ftutoria>=?")
                 + (filtro.hasta().isEmpty() ? "" : " and t.ftutoria<=?")
                 + (filtro.buscar().isEmpty() ? "" : " and (lower(t.nombre) like ? escape '!' or lower(d.nombre) like ? escape '!' or lower(t.experiencia) like ? escape '!')");
@@ -183,7 +182,7 @@ public class TutoriaDAO {
 
     private int filtros(PreparedStatement statement, Rol rol, int actorId, FiltroTutorias filtro) throws SQLException {
         int index = identidad(statement, rol, actorId);
-        if (!filtro.estado().isEmpty()) statement.setString(index++, filtro.estado());
+        if (!filtro.estado().isEmpty()&&!filtro.estado().equals("Confirmadas")) statement.setString(index++, filtro.estado());
         if (!filtro.desde().isEmpty()) statement.setString(index++, filtro.desde());
         if (!filtro.hasta().isEmpty()) statement.setString(index++, filtro.hasta());
         if (!filtro.buscar().isEmpty()) {
@@ -194,6 +193,7 @@ public class TutoriaDAO {
     }
 
     public Resumen resumen(Rol rol, int actorId) {
+        new GestionAsesoriasDAO(conn,clock).expirar();
         String sql = "select t.estado,count(*) as cantidad from tutoria t where " + alcance(rol, actorId) + " group by t.estado";
         int pendientes = 0, aceptadas = 0, completadas = 0, cerradas = 0, total = 0;
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -203,9 +203,10 @@ public class TutoriaDAO {
                     int cantidad = result.getInt("cantidad"); total += cantidad;
                     switch (EstadoTutoria.desdeValor(result.getString("estado"))) {
                         case PENDIENTE -> pendientes = cantidad;
-                        case ACEPTADA -> aceptadas = cantidad;
+                        case ACEPTADA, CONFIRMADA -> aceptadas += cantidad;
                         case COMPLETADA -> completadas = cantidad;
-                        default -> cerradas += cantidad;
+                        case CANCELADA, RECHAZADA, VENCIDA -> cerradas += cantidad;
+                        default -> { }
                     }
                 }
             }
@@ -216,7 +217,7 @@ public class TutoriaDAO {
     /** Includes sessions in progress; pending requests are never presented as confirmed appointments. */
     public Tutoria proxima(Rol rol, int actorId) {
         String sql = "select t.*,d.nombre as nombre_docente from tutoria t join docente d on d.id=t.docenteId where "
-                + alcance(rol, actorId) + " and t.estado='Aceptada' and t.ftutoria>=? and t.hora_inicio is not null"
+                + alcance(rol, actorId) + " and t.estado in ('Aceptada','Confirmada') and t.ftutoria>=? and t.hora_inicio is not null"
                 + " order by t.ftutoria,t.hora_inicio,t.id";
         LocalDateTime now = ahora();
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -239,19 +240,6 @@ public class TutoriaDAO {
         return tutoria;
     }
 
-    /** A comment never changes the workflow state. Ownership is also enforced in SQL. */
-    public boolean updateComentario(int tutoriaId, int docenteId, String comentario) {
-        if (comentario == null || comentario.isBlank() || comentario.length() > 500) {
-            throw new IllegalArgumentException("El comentario debe contener entre 1 y 500 caracteres.");
-        }
-        try (PreparedStatement statement = conn.prepareStatement("update tutoria set comentario=? where id=? and docenteId=?")) {
-            statement.setString(1, comentario);
-            statement.setInt(2, tutoriaId);
-            statement.setInt(3, docenteId);
-            return statement.executeUpdate() == 1;
-        } catch (SQLException exception) { throw failure(); }
-    }
-
     private List<Tutoria> list(String sql, Integer id) {
         List<Tutoria> list = new ArrayList<>();
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -263,7 +251,7 @@ public class TutoriaDAO {
         } catch (SQLException exception) { throw failure(); }
     }
 
-    private Tutoria read(ResultSet result) throws SQLException {
+    Tutoria read(ResultSet result) throws SQLException {
         Tutoria tutoria = new Tutoria(result.getInt("id"), result.getInt("userId"), result.getString("nombre"),
                 result.getString("genero"), result.getString("edad"), result.getString("ftutoria"), result.getString("email"),
                 result.getString("telefono"), result.getString("experiencia"), result.getInt("docenteId"),
@@ -273,7 +261,30 @@ public class TutoriaDAO {
         tutoria.setHoraInicio(time == null ? null : time.toLocalTime());
         int duration = result.getInt("duracion_minutos");
         tutoria.setDuracionMinutos(result.wasNull() ? null : duration);
+        int cursoId = result.getInt("curso_id"); tutoria.setCursoId(result.wasNull() ? null : cursoId);
+        int tarifaId = result.getInt("tarifa_id"); tutoria.setTarifaId(result.wasNull() ? null : tarifaId);
+        tutoria.setCursoNombre(result.getString("curso_nombre"));
+        tutoria.setPrecio(result.getBigDecimal("precio"));
+        tutoria.setPorcentajeDocente(result.getBigDecimal("porcentaje_docente"));
+        tutoria.setNivel(result.getString("nivel"));
+        tutoria.setEnlaceClase(result.getString("enlace_clase"));
+        tutoria.setAsistencia(result.getString("asistencia"));
+        tutoria.setCancelacionSolicitada(result.getBoolean("cancelacion_solicitada"));
+        tutoria.setPagoRevision(result.getBoolean("pago_revision"));
+        tutoria.setMotivoCancelacion(result.getString("motivo_cancelacion"));
+        tutoria.setCreadaEn(fechaHora(result,"creada_en"));
+        tutoria.setVenceRespuesta(fechaHora(result,"vence_respuesta"));
+        tutoria.setVencePago(fechaHora(result,"vence_pago"));
+        int plazo=result.getInt("plazo_pago_minutos");tutoria.setPlazoPagoMinutos(result.wasNull()?null:plazo);
         return tutoria;
+    }
+    private LocalDateTime fechaHora(ResultSet r,String campo)throws SQLException { return r.getObject(campo,LocalDateTime.class); }
+    public List<Tutoria> reservasActivas(int docente,int alumno) {
+        List<Tutoria> result=new ArrayList<>();
+        try(PreparedStatement s=conn.prepareStatement("select * from tutoria where (docenteId=? or userId=?) and estado in ('Pendiente','Pendiente de pago','Confirmada','Aceptada','Incidencia')")) {
+            s.setInt(1,docente);s.setInt(2,alumno);try(ResultSet r=s.executeQuery()){while(r.next()){Tutoria t=read(r);if(ReglasTutoria.vigente(t,ahora()))result.add(t);}}
+            return result;
+        }catch(SQLException e){throw failure();}
     }
     private IllegalStateException failure() { return new IllegalStateException("No se pudo completar la operación de tutorías."); }
 }
