@@ -1,0 +1,12 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="com.tme.dao.OfertaDAO,com.tme.dao.DocenteDAO,com.tme.db.DBConnection,com.tme.security.Html" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<% int ofertaDocenteId;try{ofertaDocenteId=Integer.parseInt(request.getParameter("docenteId"));}catch(RuntimeException e){response.sendError(400);return;}
+var profesor=new DocenteDAO(DBConnection.getConn()).getDocenteById(ofertaDocenteId);if(profesor==null){response.sendError(404);return;}
+OfertaDAO oferta=new OfertaDAO(DBConnection.getConn());var asignados=oferta.cursosDocente(ofertaDocenteId);String disponibilidadAction="/adminDisponibilidad";
+%>
+<!doctype html><html lang="es"><head><meta charset="UTF-8"><title>Cursos y horarios del profesor | TeachMate</title><%@ include file="../component/allcss.jsp" %></head><body><%@ include file="../component/navbar.jsp" %><main id="contenido" class="tm-main" tabindex="-1"><%@ include file="../component/messages.jsp" %><div class="container p-3">
+<div class="tm-page-heading"><div><p class="tm-eyebrow">Gestión de profesores</p><h1 class="tm-page-title"><%=Html.escape(profesor.getNombre())%></h1><p>Asigna sus cursos y supervisa sus horarios disponibles.</p></div><a class="btn btn-outline-secondary" href="list_docente.jsp">Volver a profesores</a></div>
+<% if(!profesor.isActivo()){ %><p class="alert alert-info">El profesor está inactivo. Reactiva su cuenta para modificar la oferta.</p><% }else{ %>
+<section class="card mb-4"><div class="card-body"><h2 class="tm-section-title">Cursos que enseña</h2><form method="post" action="../asignarCursos"><input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"><input type="hidden" name="docenteId" value="<%=ofertaDocenteId%>"><div class="tm-course-checks"><% for(var item:oferta.cursos(true)){ %><label><input type="checkbox" name="cursoId" value="<%=item.id()%>" <%=asignados.contains(item.id())?"checked":""%>> <%=Html.escape(item.nombre())%></label><% } %></div><p class="form-text">Puede enseñar varios cursos. Quitar una asignación no modifica asesorías anteriores. Los cursos inactivos se conservan en el catálogo.</p><button class="btn btn-primary" type="submit">Guardar cursos asignados</button></form></div></section>
+<%@ include file="../WEB-INF/disponibilidad.jsp" %><% } %></div></main><%@ include file="../component/footer.jsp" %></body></html>

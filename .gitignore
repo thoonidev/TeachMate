@@ -1,0 +1,10 @@
+/target/
+/build/
+/.tools/
+/.m2-local/
+*.log
+.env
+.env.*
+!.env.example
+# Original SQL retained locally, outside the published repository.
+/database/original-backup.sql
