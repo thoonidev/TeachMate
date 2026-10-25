@@ -29,7 +29,7 @@
                 <a class="tm-metric" href="list_docente.jsp"><span>Profesores activos</span><strong><%=activos%></strong><small><%=totalDocentes - activos%> inactivos · <%=totalDocentes%> registrados</small></a>
                 <div class="tm-metric"><span>Alumnos registrados</span><strong><%=docentes.countTotalUser()%></strong><small>Cuentas de alumnos</small></div>
             </div>
-            <div class="tm-role-guide">
+            <p class="alert alert-info">Revisa los comprobantes durante el horario de atención del equipo. <a href="pagos.jsp?estado=Por+atender">Abrir pagos por atender</a>. Aceptar una solicitud o recibir un comprobante todavía no confirma la clase.</p><div class="tm-role-guide">
                 <section class="card"><div class="card-body"><h2 class="tm-section-title">Seguimiento de asesorías</h2>
                     <p><strong><%=resumen.total()%></strong> asesorías registradas · <strong><%=resumen.completadas()%></strong> completadas · <strong><%=resumen.cerradas()%></strong> canceladas o rechazadas.</p>
                     <p>Usa los filtros para revisar solicitudes por fecha, estado, alumno, profesor o tema. Puedes cancelar una sesión para resolver una incidencia conservando su historial.</p>

@@ -54,7 +54,11 @@
     <% } else { %>
         <p class="alert alert-info">Abre una asesoría para revisar cancelaciones, cambios de horario e incidencias. Cada decisión conserva su motivo e historial.</p>
     <% } %>
-    <p class="text-muted small">También puedes filtrar las solicitudes pendientes de pago, vencidas y con incidencias.</p>
+    <section class="card mb-3"><div class="card-body"><h2 class="tm-section-title">Pendientes por atender</h2>
+<% if(panelRol==Rol.DOCENTE){ %><p>Revisa primero las solicitudes por responder. Cada una muestra su vencimiento; aceptar habilita el pago, todavía no confirma la clase.</p><a class="btn btn-outline-primary btn-sm" href="${panelUrl}?estado=Pendiente">Solicitudes por responder</a>
+<% }else if(panelRol==Rol.ALUMNO){ %><p>Consulta la respuesta del profesor y los pagos o correcciones pendientes. Un comprobante enviado espera validación administrativa.</p><a class="btn btn-outline-primary btn-sm" href="${panelUrl}?estado=Pendiente">Esperando respuesta</a> <a class="btn btn-outline-primary btn-sm" href="${pageContext.request.contextPath}/mis_pagos.jsp?estado=Por+atender">Comprobantes por corregir</a> <a class="btn btn-outline-primary btn-sm" href="${panelUrl}?estado=Pendiente+de+pago">Reservas pendientes de pago</a>
+<% }else{ %><p>Verifica los comprobantes en Pagos y resuelve las incidencias antes del inicio de la clase. Los pagos en revisión se muestran por proximidad de la sesión.</p><a class="btn btn-outline-primary btn-sm" href="${pageContext.request.contextPath}/admin/pagos.jsp?estado=Por+atender">Revisar pagos pendientes</a> <a class="btn btn-outline-primary btn-sm" href="${panelUrl}?estado=Incidencia">Resolver incidencias</a><% } %>
+<p class="form-text mb-0">Los vencimientos se muestran en hora de Lima e incluyen noches y fines de semana. No se envían avisos automáticos; revisa este panel durante la atención del equipo.</p></div></section>
     <section class="card"><div class="card-body">
         <h2 class="tm-section-title">Consulta e historial</h2>
         <% if (errorFiltro != null) { %><p class="alert alert-danger" role="alert"><%=com.tme.security.Html.escape(errorFiltro)%></p><% } %>
@@ -85,7 +89,9 @@
                         <td data-label="Tema / alumno"><strong><%=com.tme.security.Html.escape(fila.getExperiencia())%></strong><span class="d-block text-muted small"><%=com.tme.security.Html.escape(fila.getNombre())%> · #<%=fila.getId()%></span></td>
                         <td data-label="Fecha y horario"><%=com.tme.security.Html.escape(fila.getFtutoria())%><span class="d-block text-muted small"><%=com.tme.security.Html.escape(fila.getHorario())%></span></td>
                         <td data-label="Profesor"><%=com.tme.security.Html.escape(fila.getNombreDocente())%></td>
-                        <td data-label="Estado"><span class="tm-status tm-status-<%=EstadoTutoria.desdeValor(fila.getEstado()).getClase()%>"><%=EstadoTutoria.desdeValor(fila.getEstado()).getEtiqueta()%></span></td>
+                        <td data-label="Estado"><span class="tm-status tm-status-<%=EstadoTutoria.desdeValor(fila.getEstado()).getClase()%>"><%=EstadoTutoria.desdeValor(fila.getEstado()).getEtiqueta()%></span>
+<% if("Pendiente".equals(fila.getEstado())&&fila.getVenceRespuesta()!=null){ %><span class="d-block small">Respuesta hasta <%=fila.getVenceRespuesta().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))%> · Lima</span>
+<% }else if("Pendiente de pago".equals(fila.getEstado())){if(fila.isPagoRevision()){ %><span class="d-block small">Comprobante en revisión o corrección. Consulta el pago para conocer el siguiente paso.</span><% }else if(fila.getVencePago()!=null){ %><span class="d-block small">Pago hasta <%=fila.getVencePago().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))%> · Lima</span><% }} %></td>
                         <td data-label="Información"><details class="tm-details"><summary>Ver información</summary><dl>
                             <dt>Curso y precio de la solicitud</dt><dd><%=fila.getCursoNombre()==null ? "Registro anterior sin tarifa" : com.tme.security.Html.escape(fila.getCursoNombre())+" · S/ "+fila.getPrecio()%></dd>
                             <dt>Tema o conocimiento previo</dt><dd><%=com.tme.security.Html.escape(fila.getExperiencia())%></dd>

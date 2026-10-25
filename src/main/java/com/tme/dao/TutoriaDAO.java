@@ -168,7 +168,7 @@ public class TutoriaDAO {
             int pagina = Math.min(filtro.pagina(), paginas);
             List<Tutoria> tutorias = new ArrayList<>();
             try (PreparedStatement statement = conn.prepareStatement("select t.*, d.nombre as nombre_docente" + from
-                    + " order by t.ftutoria desc,t.hora_inicio desc,t.id desc limit ? offset ?")) {
+                    + (filtro.estado().equals("Pendiente") ? " order by t.vence_respuesta,t.ftutoria,t.hora_inicio,t.id" : filtro.estado().equals("Pendiente de pago") ? " order by t.vence_pago,t.ftutoria,t.hora_inicio,t.id" : " order by t.ftutoria desc,t.hora_inicio desc,t.id desc") + " limit ? offset ?")) {
                 int index = filtros(statement, rol, actorId, filtro);
                 statement.setInt(index++, FiltroTutorias.TAMANO);
                 statement.setInt(index, (pagina - 1) * FiltroTutorias.TAMANO);

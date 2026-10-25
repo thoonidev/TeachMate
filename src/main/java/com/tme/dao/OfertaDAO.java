@@ -103,6 +103,7 @@ public final class OfertaDAO {
         });
     }
     public List<Horario> horarios(int docenteId, int minutos, int alumnoId) {
+        if(minutos<15||minutos>180)throw new IllegalArgumentException("La duración debe ser de 15 a 180 minutos.");
         List<LocalDateTime[]> ocupados=new ArrayList<>();
         for(var reserva:new TutoriaDAO(conn).reservasActivas(docenteId,alumnoId)) {
             LocalDateTime a=ReglasTutoria.inicio(reserva);if(a!=null)ocupados.add(new LocalDateTime[]{a,a.plusMinutes(reserva.getDuracionMinutos())});
@@ -111,10 +112,10 @@ public final class OfertaDAO {
         var plazos=new ConfiguracionReservasDAO(conn).obtener();if(!plazos.completa()||!new ConfiguracionPagosDAO(conn).obtener().completa())return result;
         LocalDateTime minimo=ahora.plusMinutes(plazos.antelacion());
         for(Franja f:franjas(docenteId)) {
-            for(LocalDateTime a=f.fecha().atTime(f.desde());!a.plusMinutes(minutos).isAfter(f.fecha().atTime(f.hasta()));a=a.plusMinutes(15)) {
+            for(LocalDateTime a=f.fecha().atTime(f.desde());!a.plusMinutes(minutos).isAfter(f.fecha().atTime(f.hasta()));a=a.plusMinutes(minutos)) {
                 if(a.isBefore(minimo))continue;LocalDateTime b=a.plusMinutes(minutos);boolean libre=true;
                 for(var rango:ocupados)if(a.isBefore(rango[1])&&rango[0].isBefore(b)){libre=false;break;}
-                if(libre){result.add(new Horario(a.toLocalDate(),a.toLocalTime()));if(result.size()==12)return result;}
+                if(libre)result.add(new Horario(a.toLocalDate(),a.toLocalTime()));
             }
         }
         return result;

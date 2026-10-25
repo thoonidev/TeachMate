@@ -186,7 +186,7 @@ public final class PagosDAO {
         try{
             int total;try(PreparedStatement s=conn.prepareStatement("select count(*)"+from)){parametros(s,actor,rol,filtro);try(ResultSet r=s.executeQuery()){r.next();total=r.getInt(1);}}
             int paginas=Math.max(1,(total+19)/20),actual=Math.max(1,Math.min(pagina,paginas));
-            try(PreparedStatement s=conn.prepareStatement("select t.id,t.nombre,t.curso_nombre,t.estado,p.estado,p.enviado_en,t.ftutoria,t.hora_inicio,t.cancelacion_solicitada,coalesce(p.importe,t.precio)"+from+" order by case when p.estado='En revisión' then 0 else 1 end,p.enviado_en,t.id limit 20 offset ?")){
+            try(PreparedStatement s=conn.prepareStatement("select t.id,t.nombre,t.curso_nombre,t.estado,p.estado,p.enviado_en,t.ftutoria,t.hora_inicio,t.cancelacion_solicitada,coalesce(p.importe,t.precio)"+from+" order by case when p.estado='En revisión' then 0 else 1 end,coalesce(timestamp(t.ftutoria,t.hora_inicio),'9999-12-31 23:59:59'),p.enviado_en,t.id limit 20 offset ?")){
                 int index=parametros(s,actor,rol,filtro);s.setInt(index,(actual-1)*20);
                 try(ResultSet r=s.executeQuery()){while(r.next()){LocalDateTime inicio=null;try{if(r.getTime(8)!=null)inicio=LocalDate.parse(r.getString(7)).atTime(r.getTime(8).toLocalTime());}catch(DateTimeException ignored){}result.add(new Fila(r.getInt(1),r.getString(2),r.getString(3),r.getString(4),r.getString(5),r.getObject(6,LocalDateTime.class),inicio,r.getBoolean(9),r.getBigDecimal(10)));}}
             }return new Pagina(result,total,actual,paginas);
