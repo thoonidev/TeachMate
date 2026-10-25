@@ -7,7 +7,7 @@ services:
     dockerContext: .
     healthCheckPath: /health
     # Schema changes are applied explicitly before deploying the reviewed commit.
-    autoDeployTrigger: 'off'
+    autoDeployTrigger: "off"
     envVars:
       - key: PORT
         value: "10000"

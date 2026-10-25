@@ -4,11 +4,11 @@ Sistema web para un equipo de profesores que da asesorías individuales remotas,
 
 ## Roles
 
-| Rol | Funciones |
-| --- | --- |
+| Rol           | Funciones                                                                                                 |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
 | Administrador | Profesores, cursos, tarifas, condiciones, revisión de pagos, cancelaciones, devoluciones y liquidaciones. |
-| Profesor | Perfil, disponibilidad, solicitudes, enlace de videollamada, resultado de sesión e ingresos. |
-| Alumno | Registro, reservas, comprobantes y solicitudes de cancelación o devolución. |
+| Profesor      | Perfil, disponibilidad, solicitudes, enlace de videollamada, resultado de sesión e ingresos.              |
+| Alumno        | Registro, reservas, comprobantes y solicitudes de cancelación o devolución.                               |
 
 Videollamadas, cobros y transferencias son externos; TeachMate solo registra el seguimiento. No incluye clases grupales, pasarela de pago, transferencias automáticas, nómina, contabilidad ni avisos automáticos (correo/WhatsApp).
 
@@ -56,13 +56,13 @@ Requisitos: JDK 17, Maven, Tomcat 9, MySQL 8.0.16+.
 
 3. Configurar variables de entorno (no se carga `.env` solo):
 
-   | Variable | Uso |
-   | --- | --- |
-   | `DB_URL`, `DB_USER`, `DB_PASSWORD` | Conexión a MySQL |
-   | `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` | Acceso del administrador |
-   | `DB_CA_CERT_BASE64` | CA de Aiven (vacía en local) |
+   | Variable                                      | Uso                                |
+   | --------------------------------------------- | ---------------------------------- |
+   | `DB_URL`, `DB_USER`, `DB_PASSWORD`            | Conexión a MySQL                   |
+   | `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`          | Acceso del administrador           |
+   | `DB_CA_CERT_BASE64`                           | CA de Aiven (vacía en local)       |
    | `SESSION_COOKIE_SECURE`, `TRUST_RENDER_PROXY` | `false` en local, `true` en Render |
-   | `PORT` | Por defecto `10000` |
+   | `PORT`                                        | Por defecto `10000`                |
 
 4. Copiar `target/TeachMate.war` a `webapps/` de Tomcat. App: `http://localhost:8080/TeachMate/` · Salud: `/health`.
 
