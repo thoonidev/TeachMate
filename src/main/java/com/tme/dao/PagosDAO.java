@@ -204,7 +204,13 @@ public final class PagosDAO {
     }
     private int parametros(PreparedStatement s,int actor,Rol rol,String filtro)throws SQLException{int i=1;if(rol==Rol.ALUMNO)s.setInt(i++,actor);if(!filtro.equals("Por atender")&&!filtro.equals("Todos"))s.setString(i++,filtro);return i;}
     private void evento(int id,Rol rol,int actor,String accion,String detalle,LocalDateTime now)throws SQLException{
-        try(PreparedStatement s=conn.prepareStatement("insert into pago_evento(tutoria_id,actor_rol,actor_id,accion,detalle,ocurrido_en) values(?,?,?,?,?,?)")){s.setInt(1,id);s.setString(2,rol.name());actor(s,3,actor,rol);s.setString(4,accion);s.setString(5,detalle);s.setObject(6,now);s.executeUpdate();}
+        try(PreparedStatement s=conn.prepareStatement("insert into pago_evento(tutoria_id,actor_rol,actor_id,accion,detalle,ocurrido_en) values(?,?,?,?,?,?)",Statement.RETURN_GENERATED_KEYS)){
+            s.setInt(1,id);s.setString(2,rol.name());actor(s,3,actor,rol);s.setString(4,accion);s.setString(5,detalle);s.setObject(6,now);s.executeUpdate();
+            if(Set.of("observar","aprobar_devolucion","ejecutar_devolucion").contains(accion))try(ResultSet r=s.getGeneratedKeys()){
+                if(!r.next())throw new SQLException("No se obtuvo el identificador del evento de pago.");
+                new CorreoDAO(conn).evento(id,"p:"+r.getLong(1),accion,now);
+            }
+        }
     }
     private void actor(PreparedStatement s,int index,int actor,Rol rol)throws SQLException{if(rol==Rol.ADMIN)s.setNull(index,Types.INTEGER);else s.setInt(index,actor);}
     private IllegalStateException failure(SQLException e){return new IllegalStateException("No se pudo completar la operación de pago.",e);}

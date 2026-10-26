@@ -53,6 +53,12 @@ if [ -n "${DB_CA_CERT_BASE64:-}" ]; then
     tls_dir=$(mktemp -d /tmp/teachmate-tls.XXXXXX)
     printf '%s' "$DB_CA_CERT_BASE64" | base64 --decode > "$tls_dir/ca.pem" \
         || fail 'DB_CA_CERT_BASE64 no es un certificado codificado válido.'
+    # Keep Java's public roots for HTTPS services (Brevo), then add Aiven's CA.
+    tls_public_roots="${JAVA_HOME:-}/lib/security/cacerts"
+    [ -r "$tls_public_roots" ] || fail 'No se encontró el almacén público de certificados de Java.'
+    keytool -importkeystore -noprompt -srckeystore "$tls_public_roots" -srcstorepass changeit \
+        -destkeystore "$tls_dir/truststore.p12" -deststoretype PKCS12 -deststorepass changeit \
+        > /dev/null 2>&1 || fail 'No se pudieron conservar los certificados públicos para HTTPS.'
     keytool -importcert -noprompt -alias mysql-ca -file "$tls_dir/ca.pem" \
         -keystore "$tls_dir/truststore.p12" -storetype PKCS12 -storepass changeit \
         > /dev/null 2>&1 || fail 'No se pudo importar el certificado CA de MySQL.'

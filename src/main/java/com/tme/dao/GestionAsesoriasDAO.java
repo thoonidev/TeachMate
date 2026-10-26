@@ -207,8 +207,12 @@ public final class GestionAsesoriasDAO {
         catch(SQLException e){throw failure(e);}
     }
     static void evento(Connection conn,Integer id,String rol,Integer actor,String accion,String detalle,LocalDateTime fecha)throws SQLException {
-        try(PreparedStatement s=conn.prepareStatement("insert into tutoria_evento(tutoria_id,actor_rol,actor_id,accion,detalle,ocurrido_en) values(?,?,?,?,?,?)")) {
+        try(PreparedStatement s=conn.prepareStatement("insert into tutoria_evento(tutoria_id,actor_rol,actor_id,accion,detalle,ocurrido_en) values(?,?,?,?,?,?)",Statement.RETURN_GENERATED_KEYS)) {
             if(id==null)s.setNull(1,Types.INTEGER);else s.setInt(1,id);s.setString(2,rol);if(actor==null)s.setNull(3,Types.INTEGER);else s.setInt(3,actor);s.setString(4,accion);s.setString(5,detalle);s.setObject(6,fecha);s.executeUpdate();
+            if(id!=null)try(ResultSet r=s.getGeneratedKeys()){
+                if(!r.next())throw new SQLException("No se obtuvo el identificador del evento.");
+                new CorreoDAO(conn).evento(id,"t:"+r.getLong(1),accion,fecha);
+            }
         }
     }
     private IllegalStateException failure(SQLException e){return new IllegalStateException("No se pudo gestionar la asesoría.",e);}

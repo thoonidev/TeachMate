@@ -10,7 +10,7 @@ Sistema web para un equipo de profesores que da asesorías individuales remotas,
 | Profesor      | Perfil, disponibilidad, solicitudes, enlace de videollamada, resultado de sesión e ingresos.              |
 | Alumno        | Registro, reservas, comprobantes y solicitudes de cancelación o devolución.                               |
 
-Videollamadas, cobros y transferencias son externos; TeachMate solo registra el seguimiento. No incluye clases grupales, pasarela de pago, transferencias automáticas, nómina, contabilidad ni avisos automáticos (correo/WhatsApp).
+Videollamadas, cobros y transferencias son externos; TeachMate solo registra el seguimiento. Incluye avisos opcionales por correo mediante Brevo. No incluye clases grupales, pasarela de pago, transferencias automáticas, nómina, contabilidad ni WhatsApp.
 
 ## Estructura
 
@@ -75,7 +75,11 @@ Requisitos: JDK 17, Maven, Tomcat 9, MySQL 8.0.16+.
 3. Usar el `Dockerfile` y la ruta `/health`, con **Auto-Deploy: Off** y despliegue manual.
 4. Verificar `/health` = 200 y probar los tres roles.
 
-Para actualizar una instalación existente, ejecutar una vez las migraciones pendientes en orden (`database/migrations/001-reserva-directa.sql`, luego `002-plazos-atencion.sql`) antes del despliegue; no ejecutar `schema.sql`. Configurar plazo de pago, antelación y atención en Administración. Las reservas anteriores conservan sus condiciones. Todavía no se envían correos.
+Para actualizar una instalación existente, ejecutar una vez las migraciones pendientes en orden (`database/migrations/001-reserva-directa.sql`, `002-plazos-atencion.sql`, `003-correos.sql`) antes del despliegue; no ejecutar `schema.sql`. Configurar plazo de pago, antelación y atención en Administración. Las reservas anteriores conservan sus condiciones.
+
+Correos opcionales: verificar el remitente en Brevo y configurar `BREVO_API_KEY`, `EMAIL_FROM`, `APP_BASE_URL` (URL pública de la app), `EMAIL_FROM_NAME` (opcional, TeachMate) y `EMAIL_ENABLED=true` en Render. Por defecto el envío está desactivado; `ADMIN_EMAIL` recibe avisos administrativos. `EMAIL_DAILY_LIMIT` limita las aceptaciones diarias (250 por defecto); el proveedor aplica además su propia cuota. Se usa HTTPS, sin SMTP, conservando las raíces públicas de Java junto a la CA de Aiven. [API de Brevo](https://developers.brevo.com/docs/send-a-transactional-email).
+
+La tabla `correo_pendiente` conserva los avisos con la misma transacción de la reserva o pago. Incluye recordatorios de clase (una hora antes), pago y revisión (30 minutos antes). Se omiten recordatorios obsoletos; los avisos generales caducan tras 24 horas. Reintentos con la misma clave de Brevo dentro de 25 minutos; una respuesta incierta tras una interrupción o fuera de esa ventana requiere revisión manual para evitar duplicados. Administración → Correos y avisos permite revisar, cancelar y reintentar. “Aceptado” no garantiza entrega; no se incluyen comprobantes ni datos bancarios. Las pruebas usan memoria y un servidor simulado local, sin enviar correos reales.
 
 Tomcat procesa vencimientos al iniciar y cada minuto, en lotes de hasta 1000 reservas y 1000 propuestas; recupera los pendientes tras un reinicio. No valida pagos automáticamente. Render Free suspende el servicio después de 15 minutos sin tráfico: mientras esté suspendido no ejecuta tareas. Para procesamiento continuo, usar una instancia que permanezca activa; la comprobación de plazos también se conserva al consultar o gestionar reservas. [Límites de Render Free](https://render.com/docs/free).
 
