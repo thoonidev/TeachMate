@@ -135,6 +135,15 @@ public class CorreoDAOTest {
         reservar();procesador(m->{fail("Aviso caducado");return aceptado();},Clock.offset(clock,Duration.ofDays(2))).procesar();
         assertEquals(2,cantidad("correo_pendiente","estado='Cancelado'"));
     }
+    @Test public void recordatorioCanceladoPorAdministracionNoSeReactiva()throws Exception {
+        reservar();sql("update tutoria set estado='Confirmada'");
+        LocalDateTime cerca=LocalDateTime.of(2030,1,8,9,30);cola.recordatorios(cerca);
+        long id;
+        try(Statement s=conn.createStatement();ResultSet r=s.executeQuery("select id from correo_pendiente where tipo='Recordatorio clase' order by id limit 1")){assertTrue(r.next());id=r.getLong(1);}
+        assertTrue(cola.gestionar(id,"cancelar",false,cerca));
+        cola.recordatorios(cerca.plusMinutes(1));
+        assertEquals(1,cantidad("correo_pendiente","id="+id+" and estado='Cancelado'"));
+    }
     @Test public void avisosNoContienenComprobantesNiDatosBancarios()throws Exception {
         Tutoria t=reservar();cola.evento(t.getId(),"t:pago","Comprobante recibido",ahora);
         var m=cola.reclamar(ahora);

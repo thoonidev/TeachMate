@@ -89,6 +89,11 @@ public final class CorreoDAO {
                 s.setString(7,"TeachMate · "+asuntoPersonal+" · #"+t.getId());s.setString(8,cuerpoPersonal);s.setString(9,UUID.randomUUID().toString());
                 s.setObject(10,ahora);s.setObject(11,ahora);s.setObject(12,caduca);s.executeUpdate();
             }
+            // Returning to a previous schedule can make an unsent, automatically discarded reminder valid again.
+            // Never revive an accepted, manually cancelled or uncertain delivery.
+            if(tipo.startsWith("Recordatorio "))try(PreparedStatement s=conn.prepareStatement("update correo_pendiente set estado='Pendiente',intentos=0,primer_intento=null,uuid=?,programado_en=?,ultimo_error='' where clave=? and estado='Cancelado' and ultimo_error='El aviso ya no corresponde al estado o destinatario actual' and incierto=false and caduca_en>?")){
+                s.setString(1,UUID.randomUUID().toString());s.setObject(2,ahora);s.setString(3,clave);s.setObject(4,ahora);s.executeUpdate();
+            }
         }
     }
     private String hash(String texto){

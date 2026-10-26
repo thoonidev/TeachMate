@@ -7,7 +7,7 @@ Sistema web para un equipo de profesores que da asesorías individuales remotas,
 | Rol           | Funciones                                                                                                 |
 | ------------- | --------------------------------------------------------------------------------------------------------- |
 | Administrador | Profesores, cursos, tarifas, condiciones, revisión de pagos, cancelaciones, devoluciones y liquidaciones. |
-| Profesor      | Perfil, disponibilidad, solicitudes, enlace de videollamada, resultado de sesión e ingresos.              |
+| Profesor      | Perfil, disponibilidad, reservas, enlace de videollamada, resultado de sesión e ingresos.                 |
 | Alumno        | Registro, reservas, comprobantes y solicitudes de cancelación o devolución.                               |
 
 Videollamadas, cobros y transferencias son externos; TeachMate solo registra el seguimiento. Incluye avisos opcionales por correo mediante Brevo. No incluye clases grupales, pasarela de pago, transferencias automáticas, nómina, contabilidad ni WhatsApp.
@@ -86,5 +86,7 @@ Tomcat procesa vencimientos al iniciar y cada minuto, en lotes de hasta 1000 res
 Probar el contenedor en local: `docker build -t teachmate .` y `docker run --rm --env-file .env -p 10000:10000 teachmate`.
 
 ## Antes de operar
+
+Verificación local: `mvn verify`. Recorridos cubiertos, actualización de la base y ensayo pendiente del despliegue en [Verificación y puesta en marcha](docs/VERIFICACION.md). El diagnóstico `database/verificar-instalacion.sql` es de solo lectura. El rediseño visual corresponde a una fase posterior.
 
 Configurar tarifas, reparto, plazos, antelación mínima, cuenta receptora, instrucciones de cobro, días de corte y políticas de inasistencia. Probar en ensayo todo el flujo (reservas, pagos, reprogramación, devoluciones, liquidaciones), sin pagos ficticios en la base publicada. Respaldar datos y comprobantes (Aiven o `mysqldump` con TLS) y probar la restauración. Volver al código anterior no revierte MySQL.
