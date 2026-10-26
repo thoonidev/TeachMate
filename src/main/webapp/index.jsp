@@ -67,8 +67,8 @@
             <div class="container"><div class="tm-section-head"><div><p class="tm-eyebrow">Así de sencillo</p><h2 id="steps-title">De tu duda a tu próxima asesoría</h2></div><a class="tm-text-link" href="oferta.jsp">Solicitar asesoría <i class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></a></div>
                 <div class="tm-steps">
                     <article class="tm-step"><span class="tm-step-number">01</span><h3>Encuentra a tu profesor</h3><p>Consulta los cursos del equipo. Crea tu cuenta o inicia sesión para enviar tu solicitud.</p></article>
-                    <article class="tm-step"><span class="tm-step-number">02</span><h3>Cuéntale qué necesitas</h3><p>Elige un curso, una duración y un horario disponible. Indica el tema. El profesor revisará tu solicitud.</p></article>
-                    <article class="tm-step"><span class="tm-step-number">03</span><h3>Consulta la respuesta</h3><p>Cuando el profesor acepte, sigue las instrucciones de Mis pagos y adjunta tu comprobante. Administración verificará el ingreso para confirmar la clase. El enlace aparecerá en Mis asesorías.</p></article>
+                    <article class="tm-step"><span class="tm-step-number">02</span><h3>Cuéntale qué necesitas</h3><p>Elige un curso, una duración y un horario disponible. Indica el tema. Los horarios publicados ya cuentan con la disponibilidad del profesor.</p></article>
+                    <article class="tm-step"><span class="tm-step-number">03</span><h3>Paga y consulta la confirmación</h3><p>Después de reservar, sigue las instrucciones de Mis pagos y adjunta tu comprobante dentro del plazo. Administración verificará el ingreso para confirmar la clase. El enlace aparecerá en Mis asesorías.</p></article>
                 </div>
             </div>
         </section>
@@ -76,8 +76,8 @@
             <div><p class="tm-eyebrow">Antes de empezar</p><h2 id="faq-title">Preguntas frecuentes</h2><p class="text-muted">Lo esencial para organizar tu primera asesoría.</p></div>
             <div class="tm-faq-list">
                 <details><summary>¿Las asesorías son individuales?</summary><p>Sí. Cada sesión reúne a un alumno y un profesor para trabajar el tema indicado en la solicitud.</p></details>
-                <details><summary>¿Necesito una cuenta para solicitar?</summary><p>Puedes conocer al equipo sin registrarte. Para enviar una solicitud y consultar las respuestas necesitas una cuenta de alumno.</p></details>
-                <details><summary>¿Enviar una solicitud confirma el horario?</summary><p>No. El profesor debe aceptar y después se debe validar el pago. Consulta el estado en Mis asesorías antes de dar por confirmada la sesión.</p></details>
+                <details><summary>¿Necesito una cuenta para solicitar?</summary><p>Puedes conocer al equipo sin registrarte. Para reservar y consultar el estado de tu asesoría necesitas una cuenta de alumno.</p></details>
+                <details><summary>¿Enviar una solicitud confirma el horario?</summary><p>No. El horario queda retenido durante el plazo de pago. Administración debe validar el ingreso para confirmar la clase. Consulta el estado en Mis asesorías antes de dar por confirmada la sesión.</p></details>
                 <details><summary>¿En qué zona horaria se muestran las sesiones?</summary><p>Las fechas y horas corresponden a Lima, Perú. Si estás en otra zona horaria, considera la diferencia al proponer tu horario.</p></details>
                 <details><summary>¿Cómo accedo a la clase online?</summary><p>El enlace estará en el detalle de la asesoría confirmada cuando lo publique el profesor. Necesitarás conexión a internet, micrófono y un dispositivo para la videollamada.</p></details>
             </div>

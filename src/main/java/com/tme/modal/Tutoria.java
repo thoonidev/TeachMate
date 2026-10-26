@@ -13,7 +13,7 @@ public class Tutoria {
 	private String experiencia;
 	private int docenteId;
 	private String direccion;
-	private EstadoTutoria estado = EstadoTutoria.PENDIENTE;
+	private EstadoTutoria estado = EstadoTutoria.PENDIENTE_PAGO;
 	private String comentario = "";
     private String nombreDocente;
 	private java.time.LocalTime horaInicio;

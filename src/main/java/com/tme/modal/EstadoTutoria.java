@@ -8,7 +8,7 @@ public enum EstadoTutoria {
     private final String valor;
     EstadoTutoria(String valor) { this.valor=valor; }
     public String getValor() { return valor; }
-    public String getEtiqueta() { return this==ACEPTADA?"Aceptada (anterior)":valor; }
+    public String getEtiqueta() { return this==ACEPTADA?"Aceptada (anterior)":this==PENDIENTE?"Pendiente (anterior)":valor; }
     public String getClase() { return name().toLowerCase(java.util.Locale.ROOT); }
     public static EstadoTutoria desdeValor(String valor) {
         for(EstadoTutoria estado:values())if(estado.valor.equals(valor))return estado;

@@ -87,7 +87,7 @@ CREATE TABLE `tutoria` (
   `experiencia` VARCHAR(500) NOT NULL,
   `docenteId` INT NOT NULL,
   `direccion` VARCHAR(500) NOT NULL,
-  `estado` VARCHAR(20) NOT NULL DEFAULT 'Pendiente',
+  `estado` VARCHAR(20) NOT NULL DEFAULT 'Pendiente de pago',
   `comentario` VARCHAR(500) NOT NULL DEFAULT '',
   `hora_inicio` TIME NULL,
   `duracion_minutos` SMALLINT NULL,
@@ -135,14 +135,14 @@ CREATE TABLE `tutoria` (
 
 CREATE TABLE configuracion_reservas (
     id INT NOT NULL PRIMARY KEY,
-    respuesta_minutos INT NULL,
+    respuesta_minutos INT NULL, -- Compatibilidad: 0 para reservas directas, sin respuesta del profesor.
     pago_minutos INT NULL,
     antelacion_minutos INT NULL,
     CONSTRAINT ck_configuracion_unica CHECK(id=1),
     CONSTRAINT ck_configuracion_plazos CHECK(
         (respuesta_minutos IS NULL AND pago_minutos IS NULL AND antelacion_minutos IS NULL) OR
-        (respuesta_minutos BETWEEN 15 AND 10080 AND pago_minutos BETWEEN 15 AND 10080
-         AND antelacion_minutos BETWEEN 30 AND 43200 AND antelacion_minutos>=respuesta_minutos+pago_minutos))
+        (respuesta_minutos=0 AND pago_minutos BETWEEN 15 AND 10080
+         AND antelacion_minutos BETWEEN 1440 AND 43200 AND antelacion_minutos>=pago_minutos))
 );
 INSERT INTO configuracion_reservas(id) VALUES(1);
 CREATE TABLE tutoria_evento (

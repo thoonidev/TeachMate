@@ -68,18 +68,6 @@ public final class GestionAsesoriasDAO {
             if(!acciones(t,rol,now).contains(accion))throw new IllegalArgumentException("La acción ya no está disponible. Actualiza la asesoría.");
             String detalle;
             switch(accion) {
-                case "aceptar" -> {
-                    exigirProfesorActivo(t);
-                    if(t.getPlazoPagoMinutos()==null)throw new IllegalArgumentException("La solicitud anterior no tiene plazos de pago. Cancélala con un motivo y registra una solicitud nueva.");
-                    base.validarDisponibilidad(t);
-                    if(!new ConfiguracionPagosDAO(conn).condiciones(id).completa())new ConfiguracionPagosDAO(conn).copiar(id);
-                    LocalDateTime limite=now.plusMinutes(t.getPlazoPagoMinutos());
-                    LocalDateTime inicio=ReglasTutoria.inicio(t);if(inicio==null||!inicio.isAfter(now))throw new IllegalArgumentException("El horario ya comenzó o está por definir.");
-                    if(limite.isAfter(inicio))limite=inicio;
-                    try(PreparedStatement s=conn.prepareStatement("update tutoria set estado='Pendiente de pago',vence_pago=? where id=?")){s.setObject(1,limite);s.setInt(2,id);s.executeUpdate();}
-                    detalle="Aceptada por el profesor. Pendiente de validar el pago; plazo hasta "+limite+" (Lima).";
-                }
-                case "rechazar" -> {detalle=motivo(motivo);estado(t,"Rechazada");cerrarCambio(id,"Anulada");}
                 case "cancelar" -> {
                     detalle=motivo(motivo);
                     if(rol==Rol.ALUMNO&&(ReglasTutoria.confirmada(t)||t.isPagoRevision())) {
@@ -170,7 +158,6 @@ public final class GestionAsesoriasDAO {
         if(rol==Rol.ADMIN&&t.isCancelacionSolicitada())result.add("mantener");
         if(rol==Rol.ADMIN&&t.getEstado().equals("Incidencia"))result.add("resolver");
         if(rol==Rol.DOCENTE&&Set.of("Confirmada","Aceptada","Completada","Incidencia").contains(t.getEstado()))result.add("comentario");
-        if(rol==Rol.DOCENTE&&t.getEstado().equals("Pendiente")&&ReglasTutoria.vigente(t,now)) {if(futura&&t.getPlazoPagoMinutos()!=null)result.add("aceptar");result.add("rechazar");}
         if(rol==Rol.ALUMNO&&Set.of("Pendiente","Pendiente de pago").contains(t.getEstado())&&ReglasTutoria.vigente(t,now))result.add("cancelar");
         if(confirmada) {
             if(futura&&!t.isCancelacionSolicitada()) {if(rol!=Rol.ADMIN)result.add("cancelar");result.add("proponer");result.add("rechazar_cambio");if(rol!=Rol.ADMIN)result.add("aceptar_cambio");}
