@@ -3,6 +3,7 @@ FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /build
 COPY pom.xml ./
 COPY src ./src
+COPY database/schema.sql ./database/schema.sql
 RUN mvn --batch-mode --no-transfer-progress clean package
 
 FROM tomcat:9.0.123-jdk17-temurin-noble

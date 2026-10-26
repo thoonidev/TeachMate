@@ -1,7 +1,9 @@
 -- TeachMate: instalación nueva en MySQL 8.0.16 o posterior.
--- Crear y seleccionar una base VACÍA con utf8mb4 antes de ejecutar este archivo.
+-- Esquema completo: unica fuente SQL para instalar desde cero.
+-- Crear y seleccionar una base SIN TABLAS con utf8mb4 antes de ejecutarlo.
 -- Ejecutar una sola vez. No elimina tablas ni datos; no actualiza instalaciones existentes.
 -- No crea usuarios, cursos, tarifas ni credenciales de ejemplo.
+-- El administrador depende de las variables ADMIN_EMAIL y ADMIN_PASSWORD_HASH de Render.
 
 -- Alumnos, cursos y profesores.
 CREATE TABLE user_details (
