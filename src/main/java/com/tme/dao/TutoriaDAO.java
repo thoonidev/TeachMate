@@ -33,7 +33,8 @@ public class TutoriaDAO {
                 s.setInt(1, tutoria.getCursoId()); try (ResultSet r = s.executeQuery()) { r.next(); cursoNombre=r.getString(1); }
             }
             validarDisponibilidad(tutoria);
-            String sql = "insert into tutoria(userId,nombre,genero,edad,ftutoria,email,telefono,experiencia,docenteId,direccion,estado,hora_inicio,duracion_minutos,curso_id,tarifa_id,curso_nombre,precio,porcentaje_docente,nivel,creada_en,vence_respuesta,plazo_pago_minutos) "
+            LocalDateTime vencePago = instante.plusMinutes(plazos.pago());
+            String sql = "insert into tutoria(userId,nombre,genero,edad,ftutoria,email,telefono,experiencia,docenteId,direccion,estado,hora_inicio,duracion_minutos,curso_id,tarifa_id,curso_nombre,precio,porcentaje_docente,nivel,creada_en,vence_pago,plazo_pago_minutos) "
                     + "select ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? from docente where id=? and activo=true";
             try (PreparedStatement statement = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)) {
                 statement.setInt(1, tutoria.getUserId());
@@ -46,7 +47,7 @@ public class TutoriaDAO {
                 statement.setString(8, tutoria.getExperiencia());
                 statement.setInt(9, tutoria.getDocenteId());
                 statement.setString(10, tutoria.getDireccion());
-                statement.setString(11, "Pendiente");
+                statement.setString(11, "Pendiente de pago");
                 statement.setTime(12, Time.valueOf(tutoria.getHoraInicio()));
                 statement.setInt(13, tutoria.getDuracionMinutos());
                 statement.setInt(14, tutoria.getCursoId());
@@ -56,13 +57,18 @@ public class TutoriaDAO {
                 statement.setBigDecimal(18, tarifa.porcentaje());
                 statement.setString(19,tutoria.getNivel());
                 statement.setObject(20,instante);
-                statement.setObject(21,instante.plusMinutes(plazos.respuesta()));
+                statement.setObject(21,vencePago);
                 statement.setInt(22,plazos.pago());
                 statement.setInt(23, tutoria.getDocenteId());
                 if(statement.executeUpdate()!=1)return false;
                 try(ResultSet keys=statement.getGeneratedKeys()){if(!keys.next())throw new SQLException("No se obtuvo el identificador de la asesoría.");tutoria.setId(keys.getInt(1));}
                 new ConfiguracionPagosDAO(conn).copiar(tutoria.getId());
-                GestionAsesoriasDAO.evento(conn,tutoria.getId(),"ALUMNO",tutoria.getUserId(),"Solicitud","Solicitud creada. Respuesta hasta "+instante.plusMinutes(plazos.respuesta())+" (Lima).",instante);
+                try(PreparedStatement revision=conn.prepareStatement("update tutoria set revision_dias=?,revision_desde=?,revision_hasta=?,revision_minutos=?,revision_prevista=? where id=?")) {
+                    revision.setInt(1,plazos.dias());revision.setObject(2,plazos.desde());revision.setObject(3,plazos.hasta());
+                    revision.setInt(4,plazos.revision());revision.setObject(5,plazos.calendario().sumarRevision(vencePago));
+                    revision.setInt(6,tutoria.getId());revision.executeUpdate();
+                }
+                GestionAsesoriasDAO.evento(conn,tutoria.getId(),"ALUMNO",tutoria.getUserId(),"Reserva","Horario publicado reservado. Comprobante de pago hasta "+vencePago+" (Lima). La confirmación requiere validación administrativa del ingreso.",instante);
                 return true;
             }
         });
@@ -202,7 +208,7 @@ public class TutoriaDAO {
                 while (result.next()) {
                     int cantidad = result.getInt("cantidad"); total += cantidad;
                     switch (EstadoTutoria.desdeValor(result.getString("estado"))) {
-                        case PENDIENTE -> pendientes = cantidad;
+                        case PENDIENTE, PENDIENTE_PAGO -> pendientes += cantidad;
                         case ACEPTADA, CONFIRMADA -> aceptadas += cantidad;
                         case COMPLETADA -> completadas = cantidad;
                         case CANCELADA, RECHAZADA, VENCIDA -> cerradas += cantidad;
@@ -275,6 +281,10 @@ public class TutoriaDAO {
         tutoria.setCreadaEn(fechaHora(result,"creada_en"));
         tutoria.setVenceRespuesta(fechaHora(result,"vence_respuesta"));
         tutoria.setVencePago(fechaHora(result,"vence_pago"));
+        tutoria.setRevisionPrevista(fechaHora(result,"revision_prevista"));
+        Integer revisionDias=(Integer)result.getObject("revision_dias");
+        if(revisionDias!=null)tutoria.setCalendarioRevision(new com.tme.service.CalendarioAtencion(revisionDias,
+            result.getObject("revision_desde",java.time.LocalTime.class),result.getObject("revision_hasta",java.time.LocalTime.class),result.getInt("revision_minutos")));
         int plazo=result.getInt("plazo_pago_minutos");tutoria.setPlazoPagoMinutos(result.wasNull()?null:plazo);
         return tutoria;
     }

@@ -13,7 +13,7 @@ public class Tutoria {
 	private String experiencia;
 	private int docenteId;
 	private String direccion;
-	private EstadoTutoria estado = EstadoTutoria.PENDIENTE;
+	private EstadoTutoria estado = EstadoTutoria.PENDIENTE_PAGO;
 	private String comentario = "";
     private String nombreDocente;
 	private java.time.LocalTime horaInicio;
@@ -183,6 +183,12 @@ public class Tutoria {
     private String nivel="", enlaceClase="", asistencia="", motivoCancelacion="";
     private java.time.LocalDateTime creadaEn, venceRespuesta, vencePago;
     private Integer plazoPagoMinutos;
+    private com.tme.service.CalendarioAtencion calendarioRevision;
+    private java.time.LocalDateTime revisionPrevista;
+    public com.tme.service.CalendarioAtencion getCalendarioRevision(){return calendarioRevision;}
+    public void setCalendarioRevision(com.tme.service.CalendarioAtencion v){calendarioRevision=v;}
+    public java.time.LocalDateTime getRevisionPrevista(){return revisionPrevista;}
+    public void setRevisionPrevista(java.time.LocalDateTime v){revisionPrevista=v;}
     private boolean cancelacionSolicitada;
     private boolean pagoRevision;
     public boolean isPagoRevision(){return pagoRevision;}

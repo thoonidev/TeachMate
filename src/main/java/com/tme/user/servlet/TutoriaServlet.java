@@ -22,14 +22,14 @@ public class TutoriaServlet extends HttpServlet {
                 if (alumno.getTelefono().isBlank()) throw new IllegalArgumentException("Completa tu teléfono en Mi perfil antes de solicitar.");
                 Tutoria tutoria = new Tutoria(alumno.getId(), alumno.getNombre(), "", "", request.getParameter("ftutoria"),
                         alumno.getEmail(), alumno.getTelefono(), request.getParameter("experiencia"),
-                        Integer.parseInt(request.getParameter("docenteNameSelect")), "", "Pendiente");
+                        Integer.parseInt(request.getParameter("docenteNameSelect")), "", "Pendiente de pago");
                 tutoria.setHoraInicio(LocalTime.parse(request.getParameter("horaInicio")));
                 tutoria.setDuracionMinutos(Integer.parseInt(request.getParameter("duracionMinutos")));
                 tutoria.setNivel(request.getParameter("nivel"));
                 tutoria.setCursoId(Integer.parseInt(request.getParameter("cursoId")));
                 tutoria.setTarifaId(Integer.parseInt(request.getParameter("tarifaId")));
                 if (!dao.addTutoria(tutoria)) throw new IllegalArgumentException("El docente seleccionado ya no está disponible. Elige otro docente.");
-                session.setAttribute("successMsg", "Solicitud registrada. El horario queda reservado mientras el docente la revisa.");
+                session.setAttribute("successMsg", "Horario reservado. Consulta las instrucciones y envía tu comprobante dentro del plazo de pago. La clase se confirma cuando administración valida el ingreso.");
                 session.removeAttribute("tutoriaForm");
                 session.removeAttribute("reservaRetorno");
                 destino = "/asesoria.jsp?id="+tutoria.getId();

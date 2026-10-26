@@ -5,3 +5,6 @@
 !deploy/
 !deploy/start.sh
 !deploy/server.xml
+
+!database/
+!database/schema.sql

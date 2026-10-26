@@ -16,7 +16,7 @@ public final class PagosDAO {
     public record Comprobante(int id,int version,String medio,String referencia,LocalDateTime operado,LocalDateTime registrado) { }
     public record Archivo(byte[] datos,String mime) { }
     public record Devolucion(int id,BigDecimal importe,String motivo,LocalDateTime aprobada,LocalDateTime ejecutada,String referencia) { }
-    public record Fila(int id,String alumno,String curso,String sesion,String pago,LocalDateTime enviado,LocalDateTime inicio,boolean solicitud,BigDecimal importe) { }
+    public record Fila(int id,String alumno,String curso,String sesion,String pago,LocalDateTime enviado,LocalDateTime inicio,boolean solicitud,BigDecimal importe,LocalDateTime revision) { }
     public record Pagina(List<Fila> filas,int total,int pagina,int paginas) { }
     private final Connection conn;
     private final TutoriaDAO base;
@@ -82,6 +82,7 @@ public final class PagosDAO {
                 s.setInt(1,id);s.setInt(2,nueva);s.setString(3,c.medio());s.setString(4,referencia);s.setString(5,operacion);s.setObject(6,operado);s.setObject(7,now);s.setString(8,rol.name());actor(s,9,actor,rol);s.setBytes(10,file.datos());s.setString(11,file.mime());s.setString(12,huella);s.executeUpdate();
             }
             try(PreparedStatement s=conn.prepareStatement("update tutoria set pago_revision=true where id=?")){s.setInt(1,id);s.executeUpdate();}
+            if(!tardio&&t.getCalendarioRevision()!=null)actualizarRevision(id,t.getCalendarioRevision().sumarRevision(now));
             evento(id,rol,actor,"Comprobante recibido","Comprobante #"+nueva+" recibido para revisión. "+(tardio?"Ingreso fuera de plazo: "+motivo:"No confirma el ingreso bancario."),now);
             GestionAsesoriasDAO.evento(conn,id,rol.name(),rol==Rol.ADMIN?null:actor,"Comprobante recibido","Se recibió un comprobante para revisión administrativa. La asesoría todavía no se confirma.",now);return true;
         });
@@ -123,9 +124,15 @@ public final class PagosDAO {
                     if(t.getEstado().equals("Pendiente de pago")&&inicio!=null&&now.isBefore(inicio)){
                         Integer minutos=new ConfiguracionPagosDAO(conn).condiciones(id).correccion();if(minutos==null)throw new IllegalArgumentException("Falta configurar el plazo de corrección.");
                         limite=now.plusMinutes(minutos);if(limite.isAfter(inicio))limite=inicio;
+                        if(t.getCalendarioRevision()!=null){
+                            LocalDateTime ultimo=t.getCalendarioRevision().limiteComprobante(inicio);
+                            if(limite.isAfter(ultimo))limite=ultimo;
+                            if(!limite.isAfter(now))throw new IllegalArgumentException("No queda margen de atención para corregir y volver a revisar antes de la clase. Resuelve la sesión y el pago con el alumno.");
+                        }
                     }
                     try(PreparedStatement s=conn.prepareStatement("update pago_alumno set estado='Observado',observacion=?,corregir_hasta=?,version=version+1 where tutoria_id=?")){s.setString(1,detalle);s.setObject(2,limite);s.setInt(3,id);s.executeUpdate();}
                     try(PreparedStatement s=conn.prepareStatement("update tutoria set pago_revision=false,vence_pago=coalesce(?,vence_pago) where id=?")){s.setObject(1,limite);s.setInt(2,id);s.executeUpdate();}
+                    if(limite!=null&&t.getCalendarioRevision()!=null)actualizarRevision(id,t.getCalendarioRevision().sumarRevision(limite));
                     detalle+=". "+(limite==null?"Sin nuevo plazo de reserva; contactar a administración.":"Corregir hasta "+limite+" (Lima).");
                 }
                 case "solicitar_devolucion" -> {
@@ -166,6 +173,9 @@ public final class PagosDAO {
             evento(id,rol,actor,accion,detalle,now);return true;
         });
     }
+    private void actualizarRevision(int id,LocalDateTime prevista)throws SQLException {
+        try(PreparedStatement s=conn.prepareStatement("update tutoria set revision_prevista=? where id=?")){s.setObject(1,prevista);s.setInt(2,id);s.executeUpdate();}
+    }
     private void exigirVersion(Pago p,int version){if(version!=(p==null?0:p.version()))throw new IllegalArgumentException("El pago cambió desde que abriste la página. Revisa su estado actualizado antes de continuar.");}
     public BigDecimal devuelto(int id){try(PreparedStatement s=conn.prepareStatement("select coalesce(sum(importe),0) from pago_devolucion where tutoria_id=? and ejecutada_en is not null")){s.setInt(1,id);try(ResultSet r=s.executeQuery()){r.next();return r.getBigDecimal(1);}}catch(SQLException e){throw failure(e);}}
     public List<Comprobante> comprobantes(int id){List<Comprobante> result=new ArrayList<>();try(PreparedStatement s=conn.prepareStatement("select id,version,medio,referencia,operado_en,registrado_en from pago_comprobante where tutoria_id=? order by id desc")){s.setInt(1,id);try(ResultSet r=s.executeQuery()){while(r.next())result.add(new Comprobante(r.getInt(1),r.getInt(2),r.getString(3),r.getString(4),r.getObject(5,LocalDateTime.class),r.getObject(6,LocalDateTime.class)));}return result;}catch(SQLException e){throw failure(e);}}
@@ -186,15 +196,21 @@ public final class PagosDAO {
         try{
             int total;try(PreparedStatement s=conn.prepareStatement("select count(*)"+from)){parametros(s,actor,rol,filtro);try(ResultSet r=s.executeQuery()){r.next();total=r.getInt(1);}}
             int paginas=Math.max(1,(total+19)/20),actual=Math.max(1,Math.min(pagina,paginas));
-            try(PreparedStatement s=conn.prepareStatement("select t.id,t.nombre,t.curso_nombre,t.estado,p.estado,p.enviado_en,t.ftutoria,t.hora_inicio,t.cancelacion_solicitada,coalesce(p.importe,t.precio)"+from+" order by case when p.estado='En revisión' then 0 else 1 end,coalesce(timestamp(t.ftutoria,t.hora_inicio),'9999-12-31 23:59:59'),p.enviado_en,t.id limit 20 offset ?")){
+            try(PreparedStatement s=conn.prepareStatement("select t.id,t.nombre,t.curso_nombre,t.estado,p.estado,p.enviado_en,t.ftutoria,t.hora_inicio,t.cancelacion_solicitada,coalesce(p.importe,t.precio),t.revision_prevista"+from+" order by case when p.estado='En revisión' then 0 else 1 end,coalesce(t.revision_prevista,timestamp(t.ftutoria,t.hora_inicio),'9999-12-31 23:59:59'),p.enviado_en,t.id limit 20 offset ?")){
                 int index=parametros(s,actor,rol,filtro);s.setInt(index,(actual-1)*20);
-                try(ResultSet r=s.executeQuery()){while(r.next()){LocalDateTime inicio=null;try{if(r.getTime(8)!=null)inicio=LocalDate.parse(r.getString(7)).atTime(r.getTime(8).toLocalTime());}catch(DateTimeException ignored){}result.add(new Fila(r.getInt(1),r.getString(2),r.getString(3),r.getString(4),r.getString(5),r.getObject(6,LocalDateTime.class),inicio,r.getBoolean(9),r.getBigDecimal(10)));}}
+                try(ResultSet r=s.executeQuery()){while(r.next()){LocalDateTime inicio=null;try{if(r.getTime(8)!=null)inicio=LocalDate.parse(r.getString(7)).atTime(r.getTime(8).toLocalTime());}catch(DateTimeException ignored){}result.add(new Fila(r.getInt(1),r.getString(2),r.getString(3),r.getString(4),r.getString(5),r.getObject(6,LocalDateTime.class),inicio,r.getBoolean(9),r.getBigDecimal(10),r.getObject(11,LocalDateTime.class)));}}
             }return new Pagina(result,total,actual,paginas);
         }catch(SQLException e){throw failure(e);}
     }
     private int parametros(PreparedStatement s,int actor,Rol rol,String filtro)throws SQLException{int i=1;if(rol==Rol.ALUMNO)s.setInt(i++,actor);if(!filtro.equals("Por atender")&&!filtro.equals("Todos"))s.setString(i++,filtro);return i;}
     private void evento(int id,Rol rol,int actor,String accion,String detalle,LocalDateTime now)throws SQLException{
-        try(PreparedStatement s=conn.prepareStatement("insert into pago_evento(tutoria_id,actor_rol,actor_id,accion,detalle,ocurrido_en) values(?,?,?,?,?,?)")){s.setInt(1,id);s.setString(2,rol.name());actor(s,3,actor,rol);s.setString(4,accion);s.setString(5,detalle);s.setObject(6,now);s.executeUpdate();}
+        try(PreparedStatement s=conn.prepareStatement("insert into pago_evento(tutoria_id,actor_rol,actor_id,accion,detalle,ocurrido_en) values(?,?,?,?,?,?)",Statement.RETURN_GENERATED_KEYS)){
+            s.setInt(1,id);s.setString(2,rol.name());actor(s,3,actor,rol);s.setString(4,accion);s.setString(5,detalle);s.setObject(6,now);s.executeUpdate();
+            if(Set.of("observar","aprobar_devolucion","ejecutar_devolucion").contains(accion))try(ResultSet r=s.getGeneratedKeys()){
+                if(!r.next())throw new SQLException("No se obtuvo el identificador del evento de pago.");
+                new CorreoDAO(conn).evento(id,"p:"+r.getLong(1),accion,now);
+            }
+        }
     }
     private void actor(PreparedStatement s,int index,int actor,Rol rol)throws SQLException{if(rol==Rol.ADMIN)s.setNull(index,Types.INTEGER);else s.setInt(index,actor);}
     private IllegalStateException failure(SQLException e){return new IllegalStateException("No se pudo completar la operación de pago.",e);}

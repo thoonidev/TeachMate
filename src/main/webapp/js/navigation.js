@@ -13,3 +13,15 @@ document.addEventListener("keydown", (event) => {
     if (hadFocus) account.querySelector("summary").focus();
   });
 });
+
+// Units are explicit and remain usable without JavaScript; the server validates all ranges.
+document.querySelectorAll("[data-duration-for]").forEach((unit) => {
+  const input = document.getElementById(unit.dataset.durationFor);
+  const updateRange = () => {
+    const divisor = unit.value === "horas" ? 60 : 1;
+    input.min = Number(input.dataset.durationMin) / divisor;
+    input.max = Number(input.dataset.durationMax) / divisor;
+  };
+  updateRange();
+  unit.addEventListener("change", updateRange);
+});

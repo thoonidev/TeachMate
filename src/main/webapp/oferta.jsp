@@ -1,5 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="com.tme.dao.OfertaDAO,com.tme.dao.DocenteDAO,com.tme.db.DBConnection,com.tme.security.Html,com.tme.modal.User,java.util.List,java.time.LocalDate,java.time.LocalTime,java.time.format.DateTimeFormatter" %>
+<%@ page import="com.tme.dao.OfertaDAO,com.tme.dao.DocenteDAO,com.tme.db.DBConnection,com.tme.security.Html,com.tme.service.TiempoVisible,com.tme.modal.User,java.util.List,java.time.LocalDate,java.time.LocalTime,java.time.format.DateTimeFormatter" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
 var condiciones=new com.tme.dao.ConfiguracionReservasDAO(DBConnection.getConn()).obtener();
@@ -29,11 +29,11 @@ var formatoHora=DateTimeFormatter.ofPattern("HH:mm");
 <body><%@ include file="component/navbar.jsp" %>
 <main id="contenido" class="tm-main" tabindex="-1"><%@ include file="component/messages.jsp" %>
 <div class="container p-3">
-    <div class="tm-page-heading"><div><p class="tm-eyebrow">Encuentra tu asesoría</p><h1 class="tm-page-title">Curso, profesor y horario</h1><p>Elige curso y duración; después selecciona una fecha y un horario con tu profesor. Precios en soles y horas de Lima.</p></div></div>
+    <div class="tm-page-heading"><div><p class="tm-eyebrow">Encuentra tu asesoría</p><h1 class="tm-page-title">Encuentra tu asesoría</h1><p>Elige curso y duración; después selecciona una fecha y un horario con tu profesor. Precios en soles y horas de Lima.</p></div></div>
     <% if(!reservasHabilitadas){ %>
-    <p class="alert alert-info">El equipo está configurando las condiciones de reserva y cobro. Los horarios se habilitarán al completar la configuración.</p>
+    <p class="alert alert-info">Las reservas aún no están habilitadas. Podrás elegir horario cuando el equipo termine la configuración.</p>
     <% }else{ %>
-    <p class="alert alert-info">Reserva con al menos <strong><%=condiciones.antelacion()%> minutos (<%=condiciones.antelacion()/60%> h <%=condiciones.antelacion()%60%> min)</strong> de anticipación. Ahora puedes solicitar clases desde el <strong><%=com.tme.service.ReglasTutoria.ahora().plusMinutes(condiciones.antelacion()).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))%></strong> (Lima), según disponibilidad. Los plazos incluyen noches y fines de semana.</p>
+    <div class="tm-guidance"><p>Reserva con al menos <strong><%=TiempoVisible.duracion(condiciones.antelacion())%></strong> de anticipación. Los horarios disponibles ya incluyen el tiempo para revisar tu pago.</p><details><summary>Plazos y atención</summary><p>Tienes <%=TiempoVisible.duracion(condiciones.pago())%> desde la reserva para subir el comprobante, también de noche y en fines de semana. Revisamos los pagos <%=Html.escape(condiciones.calendario().descripcion())%>. La clase se confirma al validar el pago.</p></details></div>
     <% } %>
     <% if(docenteFiltro>0){ %><p><a href="oferta.jsp">Consultar todos los profesores</a></p><% } %>
     <section class="card mb-4"><div class="card-body">
@@ -44,16 +44,16 @@ var formatoHora=DateTimeFormatter.ofPattern("HH:mm");
                 <option value="<%=c.id()%>" <%=c.id()==cursoId?"selected":""%>><%=Html.escape(c.nombre())%></option>
             <% } %></select></div>
             <div class="col-md-4"><label class="form-label" for="tarifaId">Duración y precio</label><select class="form-select" id="tarifaId" name="tarifaId"><option value="0">Ver opciones del curso</option>
-            <% for(var t:tarifas){ %><option value="<%=t.id()%>" <%=elegida!=null&&t.id()==elegida.id()?"selected":""%>><%=t.minutos()%> minutos · S/ <%=t.precio()%></option><% } %>
+            <% for(var t:tarifas){ %><option value="<%=t.id()%>" <%=elegida!=null&&t.id()==elegida.id()?"selected":""%>><%=TiempoVisible.duracion(t.minutos())%> · S/ <%=t.precio()%></option><% } %>
             </select></div>
             <div class="col-md-3 d-flex align-items-end"><button class="btn btn-primary" type="submit">Ver horarios</button></div>
         </form>
     </div></section>
-    <% if(elegido==null){ %><p class="tm-empty">Selecciona el curso que necesitas reforzar.</p><% }else{ %>
+    <% if(cursos.isEmpty()){ %><p class="tm-empty">El catálogo aún no tiene cursos disponibles.</p><% }else if(elegido==null){ %><p class="tm-empty">Elige un curso para ver profesores, horarios y precios.</p><% }else{ %>
     <h2 class="tm-section-title"><%=Html.escape(elegido.nombre())%></h2><p class="text-muted"><%=Html.escape(elegido.descripcion())%></p>
-    <% if(elegida==null){ %><p class="alert alert-info">Este curso todavía no tiene tarifas habilitadas. No se pueden enviar nuevas solicitudes.</p>
+    <% if(elegida==null){ %><p class="alert alert-info">Este curso todavía no tiene tarifas habilitadas. Aún no se puede reservar.</p>
     <% }else{boolean hayProfesor=false; %>
-    <p class="text-muted small">Clase de <%=elegida.minutos()%> minutos · Precio total: S/ <%=elegida.precio()%>. Cada opción muestra la hora de inicio y fin.</p>
+    <p class="text-muted small">Clase de <%=TiempoVisible.duracion(elegida.minutos())%> · Precio total: S/ <%=elegida.precio()%>. Cada opción muestra la hora de inicio y fin.</p>
     <div class="tm-teacher-grid">
     <% for(var profesor:new DocenteDAO(DBConnection.getConn()).getActiveDocentes()){
         if(docenteFiltro>0&&profesor.getId()!=docenteFiltro)continue;
@@ -68,7 +68,7 @@ var formatoHora=DateTimeFormatter.ofPattern("HH:mm");
         <p><%=Html.escape(profesor.getPresentacion())%></p><p class="small text-muted"><%=Html.escape(profesor.getNiveles())%></p>
         <h4 class="h6">Elige fecha y horario</h4>
         <% if(horarios.isEmpty()){ %>
-        <p class="text-muted small"><%=reservasHabilitadas?"No hay horarios reservables para esta duración. Las franjas deben permitir completar la clase, cumplir la anticipación mínima y estar libres para ti y el profesor. Consulta otra duración o vuelve cuando se publiquen nuevas fechas.":"Los horarios estarán disponibles cuando el equipo complete las condiciones de reserva y cobro."%></p>
+        <p class="text-muted small"><%=reservasHabilitadas?"No hay horarios disponibles. Prueba otra duración o profesor.":"Los horarios estarán disponibles cuando el equipo complete las condiciones de reserva y cobro."%></p>
         <% }else{ %>
         <form method="get" action="oferta.jsp#profesor-<%=profesor.getId()%>" class="mb-3">
             <input type="hidden" name="cursoId" value="<%=cursoId%>"><input type="hidden" name="tarifaId" value="<%=elegida.id()%>">
@@ -85,7 +85,7 @@ var formatoHora=DateTimeFormatter.ofPattern("HH:mm");
                 <a class="tm-slot" href="reg_tutoria.jsp?cursoId=<%=cursoId%>&amp;tarifaId=<%=elegida.id()%>&amp;docenteId=<%=profesor.getId()%>&amp;fecha=<%=horario.fecha()%>&amp;hora=<%=horario.inicio()%>"><strong><%=horario.inicio().format(formatoHora)%>–<%=horario.inicio().plusMinutes(elegida.minutos()).format(formatoHora)%></strong></a>
             <% }if(hayTurno){ %></div><% }
         } %>
-        <p class="form-text">Se muestran todas las opciones de esta fecha. Seleccionar una todavía no retiene el horario; se verifica al enviar la solicitud.</p>
+        <p class="form-text">El horario se guarda cuando completas la reserva.</p>
         <% } %>
     </article>
     <% } %></div>

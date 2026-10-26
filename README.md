@@ -1,80 +1,69 @@
 # TeachMate
 
-Sistema web para un equipo de profesores que da asesorías individuales remotas, coordinado por un administrador. Gestiona cursos, disponibilidad, reservas, pagos y liquidaciones. Stack: Java 17, Maven, JSP/Servlets, Tomcat 9, MySQL 8.0.16+. Importes en PEN; horarios en `America/Lima`.
+Asesorías individuales online con reservas, pagos, seguimiento y liquidaciones. Java 17, Maven, JSP/Servlets, Tomcat 9 y MySQL 8.0.16+. Precios en soles; horarios de Lima, Perú.
 
-## Roles
+## Uso
 
-| Rol           | Funciones                                                                                                 |
-| ------------- | --------------------------------------------------------------------------------------------------------- |
-| Administrador | Profesores, cursos, tarifas, condiciones, revisión de pagos, cancelaciones, devoluciones y liquidaciones. |
-| Profesor      | Perfil, disponibilidad, solicitudes, enlace de videollamada, resultado de sesión e ingresos.              |
-| Alumno        | Registro, reservas, comprobantes y solicitudes de cancelación o devolución.                               |
+| Rol | Funciones |
+| --- | --- |
+| Administrador | Cursos, profesores, tarifas, plazos, revisión de pagos y liquidaciones. |
+| Profesor | Disponibilidad, clases, enlaces de videollamada e ingresos. |
+| Alumno | Reservas, comprobantes y solicitudes de cambio o cancelación. |
 
-Videollamadas, cobros y transferencias son externos; TeachMate solo registra el seguimiento. No incluye clases grupales, pasarela de pago, transferencias automáticas, nómina, contabilidad ni avisos automáticos (correo/WhatsApp).
+1. Administración configura cursos, tarifas, cobros y plazos; el profesor publica sus horarios.
+2. El alumno reserva directamente un horario disponible y paga dentro del plazo indicado.
+3. Administración verifica el ingreso y confirma la clase; el profesor publica el enlace y registra el resultado.
+4. Administración registra las devoluciones y las transferencias al profesor cuando correspondan.
 
-## Estructura
+## Reglas principales
 
-```text
-TeachMate/
-├── src/main/java/       # Datos, reglas, seguridad y controladores
-├── src/main/webapp/     # JSP y estilos
-├── database/schema.sql  # Base nueva completa
-├── deploy/              # start.sh y server.xml
-├── .env.example · Dockerfile · render.yaml · pom.xml
-```
+- Anticipación mínima de **24 horas**, configurable. El sistema también deja tiempo para pagar y revisar el comprobante.
+- Atención inicial: **lunes a sábado, 09:00–18:00 Lima**, con **2 horas de revisión**. El plazo de pago cuenta también de noche y en fines de semana; la revisión solo cuenta dentro del horario de atención. No se contemplan feriados automáticamente.
+- Publicar un horario compromete al profesor; no debe aceptar cada reserva. No se permiten cruces y las reservas vencidas liberan el horario.
+- Subir un comprobante no confirma la clase. Si sigue sin validar al inicio, pasa a incidencia. Cada reserva conserva sus plazos, precio y reparto.
+- Reprogramar requiere acuerdo de ambos. Administración revisa cancelaciones y devoluciones; cancelar no devuelve dinero automáticamente.
+- Solo se liquidan clases realizadas, pagadas y sin pendientes, una vez. Los ajustes a la baja requieren acuerdo del profesor y no modifican transferencias anteriores.
+- Cobros, transferencias y videollamadas son externos. Los comprobantes privados PDF/JPG/PNG (hasta 5 MB) se guardan en MySQL.
 
-## Flujo
+## Instalación
 
-1. Administración configura cursos, profesores, tarifas, reparto y plazos; el profesor define su disponibilidad.
-2. El alumno elige curso, profesor y horario, y solicita.
-3. El profesor acepta o rechaza; aceptar habilita el pago.
-4. El alumno transfiere y sube comprobante; administración valida el ingreso real.
-5. Pago validado = asesoría confirmada. El profesor publica el enlace y registra el resultado.
-6. Administración cierra cada semana y registra la transferencia al profesor.
+1. Crear y seleccionar una base **sin tablas**, con `utf8mb4`, y ejecutar **`database/schema.sql` una sola vez**. Es el único SQL: incluye las 24 tablas y las tres filas de configuración; no crea datos de prueba ni administrador. No actualiza tablas existentes. Borrar registros no equivale a borrar las tablas.
+2. Configurar las variables de `.env.example` en el proceso que inicia Tomcat. La aplicación no carga ese archivo automáticamente.
 
-## Reglas clave
+   | Variables | Uso |
+   | --- | --- |
+   | `DB_URL`, `DB_USER`, `DB_PASSWORD` | Conexión MySQL; usuario de aplicación con SELECT, INSERT, UPDATE y DELETE. |
+   | `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` | Acceso administrativo; conservar los actuales en Render. |
+   | `DB_CA_CERT_BASE64` | Certificado CA de Aiven en Base64; vacío para MySQL local. |
+   | `SESSION_COOKIE_SECURE`, `TRUST_RENDER_PROXY` | `false` en local y `true` en Render. |
+   | `PORT` | Puerto del contenedor, por defecto `10000`. |
 
-- Reserva, pago, realización y transferencia al profesor son estados separados.
-- No se permiten cruces de agenda; las retenciones vencidas liberan el horario.
-- Comprobante a tiempo conserva el horario; si no se valida al inicio, pasa a incidencia. Pago tardío: devolución o nueva reserva.
-- Reprogramar requiere aceptación de ambos. Cancelaciones y devoluciones tras pagar requieren revisión administrativa (nada automático).
-- Precio y reparto se guardan por reserva. Solo se liquidan sesiones realizadas, pagadas y sin pendientes, una sola vez. Parte del profesor con `HALF_UP` a 2 decimales.
-- Una devolución posterior no reescribe transferencias pasadas ni genera transferencias negativas; los ajustes a la baja requieren aceptación del profesor.
-- Seguridad: acceso por rol y propiedad, PBKDF2, CSRF, consultas parametrizadas. Comprobantes PDF/JPG/PNG ≤ 5 MB en MySQL (incluir en respaldos). Sesiones de 30 min.
+3. Ejecutar `mvn clean verify`. Para Tomcat local, copiar `target/TeachMate.war` a `webapps/`: `http://localhost:8080/TeachMate/`.
+4. Solo para un administrador nuevo, generar el hash con `java -cp "target/classes;target/TeachMate/WEB-INF/lib/*" com.tme.security.PasswordTool hash`. No guardar contraseñas ni claves en Git.
 
-## Instalación local
+## Actualizar Render y Aiven
 
-Requisitos: JDK 17, Maven, Tomcat 9, MySQL 8.0.16+.
+1. Subir la rama revisada a GitHub e integrarla en la rama que despliega el servicio. Las cinco fases están encadenadas; la rama final contiene los cambios anteriores.
+2. **Antes de desplegar**, comprobar la estructura de Aiven. Si aún tiene las tablas antiguas, necesita actualizarse: este proyecto conserva un único esquema para instalación desde cero. No ejecutar `schema.sql` sobre las tablas existentes. La limpieza del repositorio no modifica Aiven.
+3. Conservar las credenciales de Render. En `DB_URL`, usar TLS con `sslMode=VERIFY_IDENTITY` y configurar la CA de Aiven.
+4. Usar el `Dockerfile`, mantener despliegue manual y seleccionar el commit actualizado. Comprobar `/health` = 200 y el acceso de los tres roles. No es necesario crear otro servicio.
+5. Completar en Administración los plazos de pago y corrección, atención, cobro, días de corte y pago; registrar cursos, tarifas, profesores y disponibilidad.
 
-1. Crear base `teachmateweb` (utf8mb4) y ejecutar `database/schema.sql` una sola vez sobre base vacía. Usar un usuario de aplicación con `SELECT`, `INSERT`, `UPDATE`, `DELETE`.
-2. Compilar y generar el hash del administrador:
+El administrador depende de las variables de Render, no de una tabla. Reconstruir la base reinicia las configuraciones; habrá que completarlas otra vez.
 
-   ```powershell
-   mvn clean package
-   java -cp "target/classes;target/TeachMate/WEB-INF/lib/*" com.tme.security.PasswordTool hash
-   ```
+## Correos opcionales
 
-3. Configurar variables de entorno (no se carga `.env` solo):
+Verificar el remitente en [Brevo](https://developers.brevo.com/docs/send-a-transactional-email) y configurar en Render:
 
-   | Variable                                      | Uso                                |
-   | --------------------------------------------- | ---------------------------------- |
-   | `DB_URL`, `DB_USER`, `DB_PASSWORD`            | Conexión a MySQL                   |
-   | `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`          | Acceso del administrador           |
-   | `DB_CA_CERT_BASE64`                           | CA de Aiven (vacía en local)       |
-   | `SESSION_COOKIE_SECURE`, `TRUST_RENDER_PROXY` | `false` en local, `true` en Render |
-   | `PORT`                                        | Por defecto `10000`                |
+- `BREVO_API_KEY`, `EMAIL_FROM` y `APP_BASE_URL` (URL pública de TeachMate).
+- `EMAIL_FROM_NAME` (opcional; TeachMate) y `EMAIL_DAILY_LIMIT` (250 por defecto; sujeto también a la cuota del proveedor).
+- Mantener `EMAIL_ENABLED=false` hasta completar la configuración y probar la recepción; activarlo con `true`. `ADMIN_EMAIL` recibe los avisos administrativos.
 
-4. Copiar `target/TeachMate.war` a `webapps/` de Tomcat. App: `http://localhost:8080/TeachMate/` · Salud: `/health`.
+Administración → Correos y avisos permite revisar, cancelar y reintentar los envíos. “Aceptado” indica recepción por el proveedor, no entrega al destinatario. Revisar en Brevo los envíos dudosos antes de reintentar y revisar la cola pendiente antes de activarla. No se envían comprobantes ni datos bancarios. Hay recordatorios de clase, pago y revisión.
 
-## Publicar en Render + Aiven
+## Verificación y operación
 
-1. Importar `schema.sql` en una base vacía de Aiven.
-2. Configurar variables con `sslMode=VERIFY_IDENTITY` en `DB_URL`, más `SESSION_COOKIE_SECURE=true` y `TRUST_RENDER_PROXY=true`.
-3. Usar el `Dockerfile` y la ruta `/health`, con **Auto-Deploy: Off** y despliegue manual.
-4. Verificar `/health` = 200 y probar los tres roles.
-
-Probar el contenedor en local: `docker build -t teachmate .` y `docker run --rm --env-file .env -p 10000:10000 teachmate`.
-
-## Antes de operar
-
-Configurar tarifas, reparto, plazos, antelación mínima, cuenta receptora, instrucciones de cobro, días de corte y políticas de inasistencia. Probar en ensayo todo el flujo (reservas, pagos, reprogramación, devoluciones, liquidaciones), sin pagos ficticios en la base publicada. Respaldar datos y comprobantes (Aiven o `mysqldump` con TLS) y probar la restauración. Volver al código anterior no revierte MySQL.
+- `mvn verify`: 68 pruebas de reservas, plazos, pagos, reprogramaciones, devoluciones, liquidaciones, permisos y correos simulados. Los informes y el WAR quedan en `target/`, fuera de Git.
+- Vistas JSP compiladas y diseño revisado localmente en escritorio y móvil, con catálogo y sin registros. Estilo en azul tinta, marfil y coral, mensajes breves y plazos en horas.
+- Pendiente tras publicar: probar el flujo completo en un entorno de ensayo y comprobar la recepción real de correos. Las pruebas locales usan H2 y un proveedor simulado; no verifican Aiven ni la bandeja real.
+- Vencimientos y correos se procesan periódicamente mientras el servicio está activo. **Render Free suspende la aplicación tras 15 minutos sin tráfico**; durante la suspensión no ejecuta esos trabajos. Para continuidad, usar una instancia que permanezca activa. [Limitaciones de Render Free](https://render.com/docs/free).

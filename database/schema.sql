@@ -1,7 +1,9 @@
 -- TeachMate: instalación nueva en MySQL 8.0.16 o posterior.
--- Crear y seleccionar una base VACÍA con utf8mb4 antes de ejecutar este archivo.
+-- Esquema completo: unica fuente SQL para instalar desde cero.
+-- Crear y seleccionar una base SIN TABLAS con utf8mb4 antes de ejecutarlo.
 -- Ejecutar una sola vez. No elimina tablas ni datos; no actualiza instalaciones existentes.
 -- No crea usuarios, cursos, tarifas ni credenciales de ejemplo.
+-- El administrador depende de las variables ADMIN_EMAIL y ADMIN_PASSWORD_HASH de Render.
 
 -- Alumnos, cursos y profesores.
 CREATE TABLE user_details (
@@ -87,7 +89,7 @@ CREATE TABLE `tutoria` (
   `experiencia` VARCHAR(500) NOT NULL,
   `docenteId` INT NOT NULL,
   `direccion` VARCHAR(500) NOT NULL,
-  `estado` VARCHAR(20) NOT NULL DEFAULT 'Pendiente',
+  `estado` VARCHAR(20) NOT NULL DEFAULT 'Pendiente de pago',
   `comentario` VARCHAR(500) NOT NULL DEFAULT '',
   `hora_inicio` TIME NULL,
   `duracion_minutos` SMALLINT NULL,
@@ -118,6 +120,11 @@ CREATE TABLE `tutoria` (
   cobro_destino VARCHAR(200) NULL,
   cobro_instrucciones VARCHAR(1000) NULL,
   plazo_correccion_minutos INT NULL,
+  revision_dias INT NULL,
+  revision_desde TIME NULL,
+  revision_hasta TIME NULL,
+  revision_minutos INT NULL,
+  revision_prevista DATETIME NULL,
   INDEX idx_tutoria_vencimiento (estado,vence_respuesta,vence_pago),
   PRIMARY KEY (`id`),
   INDEX `uid_idx` (`userId` ASC),
@@ -135,14 +142,22 @@ CREATE TABLE `tutoria` (
 
 CREATE TABLE configuracion_reservas (
     id INT NOT NULL PRIMARY KEY,
-    respuesta_minutos INT NULL,
+    respuesta_minutos INT NULL, -- Compatibilidad: 0 para reservas directas, sin respuesta del profesor.
     pago_minutos INT NULL,
     antelacion_minutos INT NULL,
+    atencion_dias INT NOT NULL DEFAULT 63,
+    atencion_desde TIME NOT NULL DEFAULT '09:00:00',
+    atencion_hasta TIME NOT NULL DEFAULT '18:00:00',
+    revision_minutos INT NOT NULL DEFAULT 120,
+    CONSTRAINT ck_atencion_reservas CHECK(atencion_dias BETWEEN 1 AND 127
+        AND atencion_desde>='00:00:00' AND atencion_hasta<='23:59:00'
+        AND atencion_desde<atencion_hasta
+        AND revision_minutos BETWEEN 15 AND 10080),
     CONSTRAINT ck_configuracion_unica CHECK(id=1),
     CONSTRAINT ck_configuracion_plazos CHECK(
         (respuesta_minutos IS NULL AND pago_minutos IS NULL AND antelacion_minutos IS NULL) OR
-        (respuesta_minutos BETWEEN 15 AND 10080 AND pago_minutos BETWEEN 15 AND 10080
-         AND antelacion_minutos BETWEEN 30 AND 43200 AND antelacion_minutos>=respuesta_minutos+pago_minutos))
+        (respuesta_minutos=0 AND pago_minutos BETWEEN 15 AND 10080
+         AND antelacion_minutos BETWEEN 1440 AND 43200 AND antelacion_minutos>=pago_minutos))
 );
 INSERT INTO configuracion_reservas(id) VALUES(1);
 CREATE TABLE tutoria_evento (
@@ -166,6 +181,7 @@ CREATE TABLE tutoria_cambio (
     acepta_alumno BOOLEAN NOT NULL DEFAULT FALSE,
     acepta_docente BOOLEAN NOT NULL DEFAULT FALSE,
     vence_en DATETIME NOT NULL,
+    INDEX idx_cambio_vencimiento(estado,vence_en),
     FOREIGN KEY(tutoria_id) REFERENCES tutoria(id),
     CONSTRAINT ck_cambio_estado CHECK(estado IN ('Pendiente','Aceptada','Rechazada','Vencida','Anulada'))
 );
@@ -343,4 +359,35 @@ CREATE TABLE liquidacion_evento (
     FOREIGN KEY(ajuste_id) REFERENCES liquidacion_ajuste(id),
     FOREIGN KEY(docente_id) REFERENCES docente(id),
     INDEX idx_liquidacion_eventos(liquidacion_id,id)
+);
+
+-- Avisos transaccionales pendientes de envio.
+CREATE TABLE correo_pendiente (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    clave CHAR(64) NOT NULL UNIQUE,
+    tutoria_id INT NOT NULL,
+    tipo VARCHAR(45) NOT NULL,
+    referencia DATETIME NULL,
+    destino VARCHAR(254) NOT NULL,
+    rol VARCHAR(10) NOT NULL,
+    asunto VARCHAR(200) NOT NULL,
+    cuerpo TEXT NOT NULL,
+    uuid CHAR(36) NOT NULL,
+    estado VARCHAR(15) NOT NULL DEFAULT 'Pendiente',
+    intentos INT NOT NULL DEFAULT 0,
+    creado_en DATETIME NOT NULL,
+    programado_en DATETIME NOT NULL,
+    caduca_en DATETIME NOT NULL,
+    primer_intento DATETIME NULL,
+    incierto BOOLEAN NOT NULL DEFAULT FALSE,
+    bloqueo_hasta DATETIME NULL,
+    token CHAR(36) NULL,
+    aceptado_en DATETIME NULL,
+    ultimo_error VARCHAR(200) NOT NULL DEFAULT '',
+    FOREIGN KEY(tutoria_id) REFERENCES tutoria(id),
+    CONSTRAINT ck_correo_estado CHECK(estado IN ('Pendiente','Enviando','Aceptado','Fallido','Dudoso','Cancelado')),
+    CONSTRAINT ck_correo_rol CHECK(rol IN ('ALUMNO','DOCENTE','ADMIN')),
+    INDEX idx_correo_programado(estado,programado_en),
+    INDEX idx_correo_caducidad(estado,caduca_en),
+    INDEX idx_correo_aceptado(estado,aceptado_en)
 );

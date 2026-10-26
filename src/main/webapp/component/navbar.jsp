@@ -26,7 +26,7 @@
                 <c:choose>
                     <c:when test="${workspace}"><li class="nav-item tm-site-link"><a class="nav-link" href="${pageContext.request.contextPath}/index.jsp">Ver sitio <i class="fa-solid fa-arrow-up-right-from-square ms-1" aria-hidden="true"></i></a></li></c:when>
                     <c:otherwise>
-                        <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/index.jsp#cursos">Cursos</a></li>
+                        <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/oferta.jsp">Cursos</a></li>
                         <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/index.jsp#profesores">Profesores</a></li>
                         <li class="nav-item"><a class="nav-link" href="${pageContext.request.contextPath}/index.jsp#como-funciona">Cómo funciona</a></li>
                         <c:if test="${not signedIn}"><li class="nav-item"><a class="nav-link ${currentPage eq '/alumno_login.jsp' ? 'active' : ''}" href="${pageContext.request.contextPath}/alumno_login.jsp">Iniciar sesión</a></li><li class="nav-item"><a class="btn btn-primary btn-sm" href="${pageContext.request.contextPath}/reg_alumno.jsp">Crear cuenta <i class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></a></li></c:if>
@@ -56,6 +56,7 @@
                 <a class="${currentPage eq '/admin/index.jsp' ? 'active' : ''}" ${currentPage eq '/admin/index.jsp' ? 'aria-current="page"' : ''} href="${pageContext.request.contextPath}/admin/index.jsp"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i>Resumen</a>
                 <a class="${currentPage eq '/admin/cursos.jsp' ? 'active' : ''}" ${currentPage eq '/admin/cursos.jsp' ? 'aria-current="page"' : ''} href="${pageContext.request.contextPath}/admin/cursos.jsp"><i class="fa-solid fa-book-open" aria-hidden="true"></i>Cursos y tarifas</a>
                 <a class="${currentPage eq '/admin/configuracion.jsp' ? 'active' : ''}" ${currentPage eq '/admin/configuracion.jsp' ? 'aria-current="page"' : ''} href="${pageContext.request.contextPath}/admin/configuracion.jsp"><i class="fa-solid fa-sliders" aria-hidden="true"></i>Condiciones de reserva</a>
+                  <a class="${currentPage eq '/admin/correos.jsp' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/correos.jsp"><i class="fa-regular fa-envelope" aria-hidden="true"></i>Correos y avisos</a>
                 <a class="${currentPage eq '/admin/alumno.jsp' or currentPage eq '/asesoria.jsp' ? 'active' : ''}" ${currentPage eq '/admin/alumno.jsp' or currentPage eq '/asesoria.jsp' ? 'aria-current="page"' : ''} href="${pageContext.request.contextPath}/admin/alumno.jsp"><i class="fa-regular fa-calendar" aria-hidden="true"></i>Asesorías</a>
                 <a class="${currentPage eq '/admin/pagos.jsp' or currentPage eq '/pago.jsp' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/pagos.jsp"><i class="fa-solid fa-receipt" aria-hidden="true"></i>Pagos de alumnos</a>
                 <a class="${currentPage eq '/admin/liquidaciones.jsp' or currentPage eq '/liquidacion.jsp' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/liquidaciones.jsp"><i class="fa-solid fa-money-bill-transfer" aria-hidden="true"></i>Liquidaciones</a>
@@ -70,7 +71,7 @@
             </c:when>
             <c:otherwise>
                 <a class="${currentPage eq '/list_tutoria.jsp' or currentPage eq '/asesoria.jsp' ? 'active' : ''}" ${currentPage eq '/list_tutoria.jsp' or currentPage eq '/asesoria.jsp' ? 'aria-current="page"' : ''} href="${pageContext.request.contextPath}/list_tutoria.jsp"><i class="fa-regular fa-calendar" aria-hidden="true"></i>Mis asesorías</a>
-                <a class="${currentPage eq '/reg_tutoria.jsp' or currentPage eq '/oferta.jsp' ? 'active' : ''}" ${currentPage eq '/reg_tutoria.jsp' or currentPage eq '/oferta.jsp' ? 'aria-current="page"' : ''} href="${pageContext.request.contextPath}/oferta.jsp"><i class="fa-solid fa-plus" aria-hidden="true"></i>Solicitar asesoría</a>
+                <a class="${currentPage eq '/reg_tutoria.jsp' or currentPage eq '/oferta.jsp' ? 'active' : ''}" ${currentPage eq '/reg_tutoria.jsp' or currentPage eq '/oferta.jsp' ? 'aria-current="page"' : ''} href="${pageContext.request.contextPath}/oferta.jsp"><i class="fa-solid fa-plus" aria-hidden="true"></i>Reservar asesoría</a>
                 <a class="${currentPage eq '/mis_pagos.jsp' or currentPage eq '/pago.jsp' ? 'active' : ''}" href="${pageContext.request.contextPath}/mis_pagos.jsp"><i class="fa-solid fa-receipt" aria-hidden="true"></i>Mis pagos</a>
                 <a class="${currentPage eq '/change_password.jsp' or currentPage eq '/perfil.jsp' ? 'active' : ''}" ${currentPage eq '/change_password.jsp' or currentPage eq '/perfil.jsp' ? 'aria-current="page"' : ''} href="${pageContext.request.contextPath}/perfil.jsp"><i class="fa-regular fa-user" aria-hidden="true"></i>Mi perfil</a>
             </c:otherwise>

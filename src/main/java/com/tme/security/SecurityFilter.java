@@ -13,7 +13,7 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 
 public class SecurityFilter implements Filter {
-    private static final Set<String> ADMIN = Set.of("/addDocente", "/updateDocente", "/deactivateDocente", "/reactivateDocente", "/guardarCurso", "/guardarTarifa", "/retirarTarifa", "/asignarCursos", "/adminDisponibilidad", "/adminLogout", "/guardarConfiguracionReservas", "/guardarConfiguracionPagos", "/gestionarLiquidacion");
+    private static final Set<String> ADMIN = Set.of("/gestionarCorreo", "/addDocente", "/updateDocente", "/deactivateDocente", "/reactivateDocente", "/guardarCurso", "/guardarTarifa", "/retirarTarifa", "/asignarCursos", "/adminDisponibilidad", "/adminLogout", "/guardarConfiguracionReservas", "/guardarConfiguracionPagos", "/gestionarLiquidacion");
     private static final Set<String> DOCENTE = Set.of("/docenteDisponibilidad", "/docenteEditProfile", "/docenteChangePassword", "/docenteLogout");
     private static final Set<String> USER = Set.of("/addTutoria", "/guardarPerfilAlumno", "/perfil.jsp", "/userChangePassword", "/userLogout", "/change_password.jsp", "/list_tutoria.jsp", "/mis_pagos.jsp");
     private static final Set<String> AUTH = Set.of("/adminLogin", "/docenteLogin", "/userLogin", "/user_register");

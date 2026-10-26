@@ -21,12 +21,12 @@
             <div class="tm-page-heading">
                 <div><p class="tm-eyebrow">Tu espacio de profesor</p>
                     <h1 class="tm-page-title">Hola, <c:out value="${docenteObj.nombre}" /></h1>
-                    <p class="text-muted">Estas son tus solicitudes y sesiones. Los datos corresponden únicamente a tus asesorías.</p>
+                    <p class="text-muted">Consulta tus reservas y organiza tus próximas clases.</p>
                 </div>
                 <a class="btn btn-primary" href="alumno.jsp">Gestionar mis asesorías</a>
             </div>
             <div class="tm-metrics">
-                <a class="tm-metric" href="alumno.jsp?estado=Pendiente"><span>Por revisar</span><strong><%=resumen.pendientes()%></strong><small>Acepta o rechaza las solicitudes</small></a>
+                <a class="tm-metric" href="alumno.jsp?estado=Pendiente+de+pago"><span>Pendientes de pago</span><strong><%=resumen.pendientes()%></strong><small>Reservas aún sin confirmar</small></a>
                 <a class="tm-metric" href="alumno.jsp?estado=Confirmadas"><span>Confirmadas</span><strong><%=resumen.aceptadas()%></strong><small>Consulta las sesiones confirmadas</small></a>
                 <a class="tm-metric" href="alumno.jsp?estado=Completada"><span>Completadas</span><strong><%=resumen.completadas()%></strong><small>Revisa tu seguimiento anterior</small></a>
                 <a class="tm-metric" href="alumno.jsp"><span>Total</span><strong><%=resumen.total()%></strong><small>Todo tu historial</small></a>
@@ -34,7 +34,7 @@
             <section class="tm-next-session">
                 <div><h2>Tu próxima sesión confirmada</h2>
                     <% if (proxima == null) { %>
-                        <p>No tienes sesiones confirmadas próximas. Revisa tus solicitudes pendientes para organizar tu agenda.</p>
+                        <p>No tienes sesiones confirmadas próximas. Mantén actualizada tu disponibilidad para organizar tu agenda.</p>
                     <% } else { %>
                         <p><strong><%=com.tme.security.Html.escape(proxima.getNombre())%></strong> · <%=com.tme.security.Html.escape(proxima.getFtutoria())%> · <%=com.tme.security.Html.escape(proxima.getHorario())%> (Lima)</p>
                         <p>Tema: <%=com.tme.security.Html.escape(proxima.getExperiencia())%></p>
@@ -43,7 +43,7 @@
                 <a class="btn btn-outline-primary" href="alumno.jsp?estado=Confirmadas">Ver sesiones</a>
             </section>
             <div class="tm-role-guide">
-                <section class="card"><div class="card-body"><h2 class="tm-section-title">Organiza tus solicitudes</h2><p>Acepta o rechaza dentro del plazo. Aceptar habilita el pago; la clase se confirma cuando administración valida el ingreso.</p><a href="alumno.jsp?estado=Pendiente">Revisar pendientes →</a></div></section>
+                <section class="card"><div class="card-body"><h2 class="tm-section-title">Organiza tu disponibilidad</h2><p>Publica tus horarios libres. Los alumnos reservan directamente y administración confirma el pago.</p><a href="disponibilidad.jsp">Gestionar disponibilidad →</a></div></section>
                 <section class="card"><div class="card-body"><h2 class="tm-section-title">Da seguimiento al aprendizaje</h2><p>Registra comentarios desde Mis asesorías. Cuando termine una sesión confirmada, podrás registrar que se realizó o reportar una incidencia.</p><a href="edit_profile.jsp">Mi perfil y contraseña →</a></div></section>
             </div>
         </div>
