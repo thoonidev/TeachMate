@@ -21,7 +21,7 @@
             <div class="tm-page-heading">
                 <div><p class="tm-eyebrow">Tu espacio de profesor</p>
                     <h1 class="tm-page-title">Hola, <c:out value="${docenteObj.nombre}" /></h1>
-                    <p class="text-muted">Estas son tus solicitudes y sesiones. Los datos corresponden únicamente a tus asesorías.</p>
+                    <p class="text-muted">Consulta tus reservas y organiza tus próximas clases.</p>
                 </div>
                 <a class="btn btn-primary" href="alumno.jsp">Gestionar mis asesorías</a>
             </div>
@@ -43,7 +43,7 @@
                 <a class="btn btn-outline-primary" href="alumno.jsp?estado=Confirmadas">Ver sesiones</a>
             </section>
             <div class="tm-role-guide">
-                <section class="card"><div class="card-body"><h2 class="tm-section-title">Organiza tu disponibilidad</h2><p>Los alumnos reservan directamente tus horarios publicados. No necesitas aceptar cada reserva. La clase se confirma cuando administración valida el ingreso.</p><a href="disponibilidad.jsp">Gestionar disponibilidad →</a></div></section>
+                <section class="card"><div class="card-body"><h2 class="tm-section-title">Organiza tu disponibilidad</h2><p>Publica tus horarios libres. Los alumnos reservan directamente y administración confirma el pago.</p><a href="disponibilidad.jsp">Gestionar disponibilidad →</a></div></section>
                 <section class="card"><div class="card-body"><h2 class="tm-section-title">Da seguimiento al aprendizaje</h2><p>Registra comentarios desde Mis asesorías. Cuando termine una sesión confirmada, podrás registrar que se realizó o reportar una incidencia.</p><a href="edit_profile.jsp">Mi perfil y contraseña →</a></div></section>
             </div>
         </div>

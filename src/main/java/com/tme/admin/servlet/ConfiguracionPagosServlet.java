@@ -9,9 +9,9 @@ import javax.servlet.http.*;
 public final class ConfiguracionPagosServlet extends HttpServlet {
     @Override protected void doPost(HttpServletRequest q,HttpServletResponse r)throws IOException{
         try{
-            new ConfiguracionPagosDAO(DBConnection.getConn()).guardar(q.getParameter("medio"),q.getParameter("titular"),q.getParameter("destino"),q.getParameter("instrucciones"),Integer.parseInt(q.getParameter("correccion")));
+            new ConfiguracionPagosDAO(DBConnection.getConn()).guardar(q.getParameter("medio"),q.getParameter("titular"),q.getParameter("destino"),q.getParameter("instrucciones"),com.tme.service.TiempoVisible.minutos(q.getParameter("correccion"),q.getParameter("correccionUnidad")));
             q.getSession().setAttribute("successMsg","Instrucciones de cobro guardadas. Las reservas existentes conservan sus condiciones.");
-        }catch(IllegalArgumentException e){q.getSession().setAttribute("errorMsg",e instanceof NumberFormatException?"Indica el plazo de corrección en minutos enteros.":e.getMessage());}
+        }catch(IllegalArgumentException e){q.getSession().setAttribute("errorMsg",e instanceof NumberFormatException?"Revisa el plazo de corrección.":e.getMessage());}
         catch(IllegalStateException e){q.getServletContext().log("No se pudo guardar la configuración de cobro.",e);r.sendError(500);return;}
         r.sendRedirect(q.getContextPath()+"/admin/configuracion.jsp#cobros");
     }

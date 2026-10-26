@@ -30,7 +30,7 @@
                     : panelRol == Rol.ADMIN ? "Consulta el historial y resuelve incidencias sin eliminar las asesorías."
                     : "Consulta tus reservas, completa el pago y organiza tus próximas sesiones."%></p>
         </div>
-        <% if (panelRol == Rol.ALUMNO) { %><a class="btn btn-primary" href="${pageContext.request.contextPath}/oferta.jsp">Solicitar asesoría</a><% } %>
+        <% if (panelRol == Rol.ALUMNO) { %><a class="btn btn-primary" href="${pageContext.request.contextPath}/oferta.jsp">Reservar asesoría</a><% } %>
     </div>
     <div class="tm-metrics" aria-label="Resumen de asesorías">
         <div class="tm-metric"><span>Pendientes de pago</span><strong><%=resumen.pendientes()%></strong><small>Reservas aún sin confirmar</small></div>
@@ -43,7 +43,7 @@
         <div>
             <h2><%=proxima != null && !ReglasTutoria.inicio(proxima).isAfter(horaPanel) ? "Sesión en curso" : "Próxima asesoría confirmada"%></h2>
             <% if (proxima == null) { %>
-                <p>No tienes sesiones confirmadas próximas. Las solicitudes aparecerán aquí cuando la sesión esté confirmada.</p>
+                <p>Aún no tienes próximas clases confirmadas.</p>
             <% } else { %>
                 <p><strong><%=com.tme.security.Html.escape(proxima.getFtutoria())%> · <%=com.tme.security.Html.escape(proxima.getHorario())%></strong> (Lima)</p>
                 <p>Alumno: <%=com.tme.security.Html.escape(proxima.getNombre())%> · Profesor: <%=com.tme.security.Html.escape(proxima.getNombreDocente())%></p>
@@ -55,10 +55,10 @@
         <p class="alert alert-info">Abre una asesoría para revisar cancelaciones, cambios de horario e incidencias. Cada decisión conserva su motivo e historial.</p>
     <% } %>
     <section class="card mb-3"><div class="card-body"><h2 class="tm-section-title">Pendientes por atender</h2>
-<% if(panelRol==Rol.DOCENTE){ %><p>Las reservas de tus horarios publicados no requieren aceptación. Mantén tu disponibilidad actualizada y prepara las sesiones cuando el pago esté validado.</p><a class="btn btn-outline-primary btn-sm" href="${panelUrl}?estado=Pendiente+de+pago">Reservas pendientes de pago</a>
-<% }else if(panelRol==Rol.ALUMNO){ %><p>Consulta los pagos o correcciones pendientes. Un comprobante enviado espera validación administrativa.</p><a class="btn btn-outline-primary btn-sm" href="${pageContext.request.contextPath}/mis_pagos.jsp?estado=Por+atender">Comprobantes por corregir</a> <a class="btn btn-outline-primary btn-sm" href="${panelUrl}?estado=Pendiente+de+pago">Reservas pendientes de pago</a>
-<% }else{ %><p>Verifica los comprobantes en Pagos y resuelve las incidencias antes del inicio de la clase. Los pagos en revisión se muestran por proximidad de la sesión.</p><a class="btn btn-outline-primary btn-sm" href="${pageContext.request.contextPath}/admin/pagos.jsp?estado=Por+atender">Revisar pagos pendientes</a> <a class="btn btn-outline-primary btn-sm" href="${panelUrl}?estado=Incidencia">Resolver incidencias</a><% } %>
-<p class="form-text mb-0">El plazo para enviar o corregir el comprobante corre también de noche y en fines de semana. La revisión administrativa respeta el horario de atención acordado. Las reservas sin comprobante vencen automáticamente. Consulta aquí el estado actualizado, aunque recibas avisos por correo.</p></div></section>
+<% if(panelRol==Rol.DOCENTE){ %><p>No necesitas aceptar cada reserva. Prepara la clase cuando el pago esté validado.</p><a class="btn btn-outline-primary btn-sm" href="${panelUrl}?estado=Pendiente+de+pago">Reservas pendientes de pago</a>
+<% }else if(panelRol==Rol.ALUMNO){ %><p>Completa tus pagos y corrige los comprobantes observados.</p><a class="btn btn-outline-primary btn-sm" href="${pageContext.request.contextPath}/mis_pagos.jsp?estado=Por+atender">Comprobantes por corregir</a> <a class="btn btn-outline-primary btn-sm" href="${panelUrl}?estado=Pendiente+de+pago">Reservas pendientes de pago</a>
+<% }else{ %><p>Revisa los comprobantes y resuelve las incidencias antes de cada clase.</p><a class="btn btn-outline-primary btn-sm" href="${pageContext.request.contextPath}/admin/pagos.jsp?estado=Por+atender">Revisar pagos pendientes</a> <a class="btn btn-outline-primary btn-sm" href="${panelUrl}?estado=Incidencia">Resolver incidencias</a><% } %>
+<p class="form-text mb-0">Los plazos de pago cuentan también de noche y en fines de semana. Consulta siempre el estado de tu reserva aquí.</p></div></section>
     <section class="card"><div class="card-body">
         <h2 class="tm-section-title">Consulta e historial</h2>
         <% if (errorFiltro != null) { %><p class="alert alert-danger" role="alert"><%=com.tme.security.Html.escape(errorFiltro)%></p><% } %>
@@ -78,11 +78,11 @@
         <p class="text-muted small" role="status">Resultados: <%=resultado.total()%> · Página <%=resultado.pagina()%> de <%=resultado.paginas()%>. Horarios en Lima.</p>
         <div class="table-responsive" role="region" aria-label="Asesorías e historial" tabindex="0">
             <table class="table table-striped tm-session-table">
-                <caption>Solicitudes e historial. Las solicitudes y los pagos pendientes todavía requieren confirmación.</caption>
+                <caption>Reservas e historial. La clase se confirma al validar el pago.</caption>
                 <thead><tr><th scope="col">Tema / alumno</th><th scope="col">Fecha y horario</th><th scope="col">Profesor</th><th scope="col">Estado</th><th scope="col">Información</th><th scope="col">Acciones</th></tr></thead>
                 <tbody>
                 <% if (resultado.tutorias().isEmpty()) { %>
-                    <tr><td colspan="6"><div class="tm-empty">No hay asesorías para mostrar. Puedes cambiar los filtros o consultar de nuevo cuando haya solicitudes.</div></td></tr>
+                    <tr><td colspan="6"><div class="tm-empty">No hay asesorías para estos filtros.</div></td></tr>
                 <% }
                 for (Tutoria fila : resultado.tutorias()) { %>
                     <tr>
@@ -93,7 +93,7 @@
 <% if("Pendiente".equals(fila.getEstado())&&fila.getVenceRespuesta()!=null){ %><span class="d-block small">Registro anterior: respuesta hasta <%=fila.getVenceRespuesta().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))%> · Lima</span>
 <% }else if("Pendiente de pago".equals(fila.getEstado())){if(fila.isPagoRevision()){ %><span class="d-block small">Comprobante en revisión o corrección. Consulta el pago para conocer el siguiente paso.</span><% }else if(fila.getVencePago()!=null){ %><span class="d-block small">Pago hasta <%=fila.getVencePago().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))%> · Lima</span><% }} %></td>
                         <td data-label="Información"><details class="tm-details"><summary>Ver información</summary><dl>
-                            <dt>Curso y precio de la solicitud</dt><dd><%=fila.getCursoNombre()==null ? "Registro anterior sin tarifa" : com.tme.security.Html.escape(fila.getCursoNombre())+" · S/ "+fila.getPrecio()%></dd>
+                            <dt>Curso y precio</dt><dd><%=fila.getCursoNombre()==null ? "Registro anterior sin tarifa" : com.tme.security.Html.escape(fila.getCursoNombre())+" · S/ "+fila.getPrecio()%></dd>
                             <dt>Tema o conocimiento previo</dt><dd><%=com.tme.security.Html.escape(fila.getExperiencia())%></dd>
                             <dt>Correo</dt><dd><%=com.tme.security.Html.escape(fila.getEmail())%></dd>
                             <dt>Teléfono</dt><dd><%=com.tme.security.Html.escape(fila.getTelefono())%></dd>

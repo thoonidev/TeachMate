@@ -24,19 +24,19 @@
                 <a class="btn btn-primary" href="docente.jsp">Registrar profesor</a>
             </div>
             <div class="tm-metrics">
-                <a class="tm-metric" href="alumno.jsp?estado=Pendiente+de+pago"><span>Reservas pendientes de pago</span><strong><%=resumen.pendientes()%></strong><small>Pendientes de ingreso validado</small></a>
-                <a class="tm-metric" href="alumno.jsp?estado=Confirmadas"><span>Sesiones confirmadas</span><strong><%=resumen.aceptadas()%></strong><small>Confirma el seguimiento</small></a>
+                <a class="tm-metric" href="alumno.jsp?estado=Pendiente+de+pago"><span>Reservas pendientes de pago</span><strong><%=resumen.pendientes()%></strong><small>Aún sin pago validado</small></a>
+                <a class="tm-metric" href="alumno.jsp?estado=Confirmadas"><span>Sesiones confirmadas</span><strong><%=resumen.aceptadas()%></strong><small>Clases con pago validado</small></a>
                 <a class="tm-metric" href="list_docente.jsp"><span>Profesores activos</span><strong><%=activos%></strong><small><%=totalDocentes - activos%> inactivos · <%=totalDocentes%> registrados</small></a>
                 <div class="tm-metric"><span>Alumnos registrados</span><strong><%=docentes.countTotalUser()%></strong><small>Cuentas de alumnos</small></div>
             </div>
-            <p class="alert alert-info">Revisa los comprobantes durante el horario de atención del equipo. <a href="pagos.jsp?estado=Por+atender">Abrir pagos por atender</a>. Reservar un horario o recibir un comprobante todavía no confirma la clase.</p><div class="tm-role-guide">
+            <p class="alert alert-info">Revisa los pagos pendientes durante el horario de atención. <a href="pagos.jsp?estado=Por+atender">Abrir pagos por atender</a>. Confirma la clase solo después de verificar el ingreso.</p><div class="tm-role-guide">
                 <section class="card"><div class="card-body"><h2 class="tm-section-title">Seguimiento de asesorías</h2>
                     <p><strong><%=resumen.total()%></strong> asesorías registradas · <strong><%=resumen.completadas()%></strong> completadas · <strong><%=resumen.cerradas()%></strong> canceladas o rechazadas.</p>
-                    <p>Usa los filtros para revisar solicitudes por fecha, estado, alumno, profesor o tema. Puedes cancelar una sesión para resolver una incidencia conservando su historial.</p>
+                    <p>Filtra por fecha, estado o participante. Abre una asesoría para gestionar cambios o incidencias.</p>
                     <a class="btn btn-outline-primary" href="alumno.jsp">Consultar asesorías</a>
                 </div></section>
                 <section class="card"><div class="card-body"><h2 class="tm-section-title">Profesores y cursos</h2>
-                    <p>Gestiona los accesos desde Profesores. Desactivar una cuenta conserva sus asesorías; reactivarla permite recibir nuevas solicitudes.</p>
+                    <p>Registra profesores, asigna sus cursos y define las tarifas. Desactivar una cuenta conserva su historial.</p>
                     <p>Cursos registrados en el catálogo: <strong><%=docentes.countTotalEspecialidad()%></strong>.</p>
                     <a class="btn btn-outline-primary" href="list_docente.jsp">Gestionar profesores</a>
                     <a class="btn btn-outline-secondary" href="cursos.jsp">Cursos y tarifas</a>

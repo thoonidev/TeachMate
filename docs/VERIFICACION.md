@@ -19,7 +19,9 @@ Ejecutar `mvn verify`. Las pruebas permanentes están en `src/test/java`; los in
 | Correos | Cola atómica, deduplicación, reintentos, cuota, interrupciones, avisos caducados y proveedor simulado. |
 | Recordatorios | Se descartan horarios obsoletos; volver al horario original recupera avisos descartados automáticamente, sin repetir aceptados ni recuperar cancelaciones manuales. |
 
-También se compilan las páginas JSP completas con Tomcat 9 y se comprueba la sintaxis del inicio del contenedor. La renovación de colores, tipografía y composición corresponde a la fase 5.
+También se compilan las páginas JSP completas con Tomcat 9 y se comprueba la sintaxis del inicio del contenedor. La fase 5 renueva el estilo compartido, centra las secciones de la portada y reduce las instrucciones a lo necesario. El catálogo vacío no muestra tarjetas ficticias. Los plazos se presentan en horas; administración permite horas decimales o minutos, sin cambiar los valores guardados ni las reglas de reserva.
+
+La comprobación de la fase 5 incluye 68 pruebas aprobadas, compilación de las vistas JSP y vista previa local con H2: portada con y sin catálogo, reserva del alumno, disponibilidad del profesor y configuración de administración. Se revisaron escritorio y anchos móviles de 320 y 390 px; guardar 1.5 horas conserva el plazo de 90 minutos. Los datos de esa vista previa son desechables y no se incorporan al proyecto ni a Aiven.
 
 ## Base publicada
 

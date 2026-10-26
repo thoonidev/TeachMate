@@ -38,6 +38,10 @@ public record CalendarioAtencion(int dias, LocalTime desde, LocalTime hasta, int
         String[] nombres={"lunes","martes","miércoles","jueves","viernes","sábado","domingo"};
         List<String> seleccion=new ArrayList<>();
         for(int i=0;i<7;i++)if((dias&(1<<i))!=0)seleccion.add(nombres[i]);
-        return String.join(", ",seleccion)+", "+desde+"–"+hasta+" (Lima)";
+        String diasTexto = String.join(", ",seleccion);
+        int primero = Integer.numberOfTrailingZeros(dias), ultimo = 31 - Integer.numberOfLeadingZeros(dias);
+        if (seleccion.size() > 2 && dias == ((1 << (ultimo + 1)) - (1 << primero)))
+            diasTexto = "de " + nombres[primero] + " a " + nombres[ultimo];
+        return diasTexto+", "+desde+"–"+hasta+" (Lima)";
     }
 }

@@ -87,6 +87,6 @@ Probar el contenedor en local: `docker build -t teachmate .` y `docker run --rm 
 
 ## Antes de operar
 
-Verificación local: `mvn verify`. Recorridos cubiertos, actualización de la base y ensayo pendiente del despliegue en [Verificación y puesta en marcha](docs/VERIFICACION.md). El diagnóstico `database/verificar-instalacion.sql` es de solo lectura. El rediseño visual corresponde a una fase posterior.
+Verificación local: `mvn verify`. Recorridos cubiertos, actualización de la base y ensayo pendiente del despliegue en [Verificación y puesta en marcha](docs/VERIFICACION.md). El diagnóstico `database/verificar-instalacion.sql` es de solo lectura. Interfaz en azul tinta, marfil y coral; portada con catálogo dinámico, mensajes breves y plazos en horas.
 
 Configurar tarifas, reparto, plazos, antelación mínima, cuenta receptora, instrucciones de cobro, días de corte y políticas de inasistencia. Probar en ensayo todo el flujo (reservas, pagos, reprogramación, devoluciones, liquidaciones), sin pagos ficticios en la base publicada. Respaldar datos y comprobantes (Aiven o `mysqldump` con TLS) y probar la restauración. Volver al código anterior no revierte MySQL.

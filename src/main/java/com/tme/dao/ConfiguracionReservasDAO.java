@@ -36,7 +36,7 @@ public final class ConfiguracionReservasDAO {
                 s.setInt(1,pago);s.setInt(2,antelacion);s.setInt(3,dias);s.setObject(4,desde);s.setObject(5,hasta);s.setInt(6,revision);
                 if(s.executeUpdate()!=1)throw new IllegalStateException("Falta la configuración de reservas.");
             }
-            GestionAsesoriasDAO.evento(conn,null,"ADMIN",null,"Configuración","Pago: "+pago+" min; antelación: "+antelacion+" min. Revisión: "+revision+" min de atención; "+calendario.descripcion()+".",ReglasTutoria.ahora());
+            GestionAsesoriasDAO.evento(conn,null,"ADMIN",null,"Configuración","Pago: "+com.tme.service.TiempoVisible.duracion(pago)+"; anticipación: "+com.tme.service.TiempoVisible.duracion(antelacion)+". Revisión: "+com.tme.service.TiempoVisible.duracion(revision)+" de atención; "+calendario.descripcion()+".",ReglasTutoria.ahora());
             return true;
         });
     }
@@ -44,7 +44,7 @@ public final class ConfiguracionReservasDAO {
         Configuracion c=obtener();
         if(!c.completa())throw new IllegalArgumentException("El administrador debe configurar los plazos antes de habilitar nuevas reservas.");
         if(!new ConfiguracionPagosDAO(conn).obtener().completa())throw new IllegalArgumentException("El administrador debe configurar el cobro antes de habilitar nuevas reservas.");
-        if(inicio.isBefore(c.minimo(ahora)))throw new IllegalArgumentException("Elige un horario desde "+c.minimo(ahora)+" (Lima), con la anticipación y el margen de revisión administrativa requeridos.");
+        if(inicio.isBefore(c.minimo(ahora)))throw new IllegalArgumentException("Elige un horario desde el "+c.minimo(ahora).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))+" (Lima). Necesitamos tiempo para revisar el pago.");
         return c;
     }
 }

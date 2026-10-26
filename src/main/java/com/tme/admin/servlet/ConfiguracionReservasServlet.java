@@ -15,10 +15,10 @@ public final class ConfiguracionReservasServlet extends HttpServlet {
             java.time.LocalTime desde,hasta;
             try { desde=java.time.LocalTime.parse(q.getParameter("desde"));hasta=java.time.LocalTime.parse(q.getParameter("hasta")); }
             catch(java.time.DateTimeException|NullPointerException e){throw new IllegalArgumentException("Indica las horas de inicio y fin de atención.");}
-            new ConfiguracionReservasDAO(DBConnection.getConn()).guardar(Integer.parseInt(q.getParameter("pago")),Integer.parseInt(q.getParameter("antelacion")),
-                dias,desde,hasta,Integer.parseInt(q.getParameter("revision")));
-            q.getSession().setAttribute("successMsg","Plazos guardados. Las solicitudes anteriores conservan sus vencimientos.");
-        }catch(IllegalArgumentException e){q.getSession().setAttribute("errorMsg",e instanceof NumberFormatException?"Indica el plazo de pago, la antelación y el margen de revisión en minutos enteros.":e.getMessage());}
+            new ConfiguracionReservasDAO(DBConnection.getConn()).guardar(com.tme.service.TiempoVisible.minutos(q.getParameter("pago"),q.getParameter("pagoUnidad")),com.tme.service.TiempoVisible.minutos(q.getParameter("antelacion"),q.getParameter("antelacionUnidad")),
+                dias,desde,hasta,com.tme.service.TiempoVisible.minutos(q.getParameter("revision"),q.getParameter("revisionUnidad")));
+            q.getSession().setAttribute("successMsg","Plazos guardados. Se aplican a las nuevas reservas.");
+        }catch(IllegalArgumentException e){q.getSession().setAttribute("errorMsg",e instanceof NumberFormatException?"Revisa los plazos y los días de atención.":e.getMessage());}
         catch(IllegalStateException e){r.sendError(500);return;}
         r.sendRedirect(q.getContextPath()+"/admin/configuracion.jsp");
     }
