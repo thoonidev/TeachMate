@@ -37,6 +37,7 @@ TeachMate/
 - Reserva, pago, realización y transferencia al profesor son estados separados.
 - No se permiten cruces de agenda; las retenciones vencidas liberan el horario.
 - Antelación mínima de 24 horas (1440 minutos), configurable hacia arriba y suficiente para cubrir el plazo de pago. Retirar disponibilidad no cancela reservas existentes.
+- Se ofrecen horarios desde el mayor de estos límites: antelación mínima o fin del plazo de pago más el margen de revisión en horas de atención. Atención inicial: lunes a sábado, 09:00–18:00 Lima; revisión: 120 minutos. El pago corre en tiempo continuo; la revisión salta noches y días sin atención. Cada reserva conserva sus condiciones; las correcciones también dejan margen para revisar antes de la clase. Calendario semanal, sin feriados automáticos.
 - Comprobante a tiempo conserva el horario; si no se valida al inicio, pasa a incidencia. Pago tardío: devolución o nueva reserva.
 - Reprogramar requiere aceptación de ambos. Cancelaciones y devoluciones tras pagar requieren revisión administrativa (nada automático).
 - Precio y reparto se guardan por reserva. Solo se liquidan sesiones realizadas, pagadas y sin pendientes, una sola vez. Parte del profesor con `HALF_UP` a 2 decimales.
@@ -74,7 +75,9 @@ Requisitos: JDK 17, Maven, Tomcat 9, MySQL 8.0.16+.
 3. Usar el `Dockerfile` y la ruta `/health`, con **Auto-Deploy: Off** y despliegue manual.
 4. Verificar `/health` = 200 y probar los tres roles.
 
-Para actualizar una instalación anterior a la reserva directa, ejecutar una vez `database/migrations/001-reserva-directa.sql` antes del despliegue (no ejecutar `schema.sql` sobre la base existente). Configurar plazo de pago y antelación en Administración. Esta fase mantiene la validación manual del ingreso, los plazos corridos y la revisión desde los paneles; todavía no incorpora correos ni vencimientos periódicos.
+Para actualizar una instalación existente, ejecutar una vez las migraciones pendientes en orden (`database/migrations/001-reserva-directa.sql`, luego `002-plazos-atencion.sql`) antes del despliegue; no ejecutar `schema.sql`. Configurar plazo de pago, antelación y atención en Administración. Las reservas anteriores conservan sus condiciones. Todavía no se envían correos.
+
+Tomcat procesa vencimientos al iniciar y cada minuto, en lotes de hasta 1000 reservas y 1000 propuestas; recupera los pendientes tras un reinicio. No valida pagos automáticamente. Render Free suspende el servicio después de 15 minutos sin tráfico: mientras esté suspendido no ejecuta tareas. Para procesamiento continuo, usar una instancia que permanezca activa; la comprobación de plazos también se conserva al consultar o gestionar reservas. [Límites de Render Free](https://render.com/docs/free).
 
 Probar el contenedor en local: `docker build -t teachmate .` y `docker run --rm --env-file .env -p 10000:10000 teachmate`.
 

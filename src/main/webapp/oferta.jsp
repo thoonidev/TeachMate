@@ -33,7 +33,7 @@ var formatoHora=DateTimeFormatter.ofPattern("HH:mm");
     <% if(!reservasHabilitadas){ %>
     <p class="alert alert-info">El equipo está configurando las condiciones de reserva y cobro. Los horarios se habilitarán al completar la configuración.</p>
     <% }else{ %>
-    <p class="alert alert-info">Reserva con al menos <strong><%=condiciones.antelacion()%> minutos (<%=condiciones.antelacion()/60%> h <%=condiciones.antelacion()%60%> min)</strong> de anticipación. Ahora puedes solicitar clases desde el <strong><%=com.tme.service.ReglasTutoria.ahora().plusMinutes(condiciones.antelacion()).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))%></strong> (Lima), según disponibilidad. Los plazos incluyen noches y fines de semana.</p>
+    <p class="alert alert-info">Reserva con al menos <strong><%=condiciones.antelacion()%> minutos (<%=condiciones.antelacion()/60%> h <%=condiciones.antelacion()%60%> min)</strong> de anticipación. Ahora puedes solicitar clases desde el <strong><%=condiciones.minimo(com.tme.service.ReglasTutoria.ahora()).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))%></strong> (Lima), según disponibilidad. El plazo para enviar el comprobante corre también de noche y en fines de semana. Los horarios ofrecidos dejan <%=condiciones.revision()%> minutos de atención para revisar el pago. Atención administrativa: <%=Html.escape(condiciones.calendario().descripcion())%>.</p>
     <% } %>
     <% if(docenteFiltro>0){ %><p><a href="oferta.jsp">Consultar todos los profesores</a></p><% } %>
     <section class="card mb-4"><div class="card-body">

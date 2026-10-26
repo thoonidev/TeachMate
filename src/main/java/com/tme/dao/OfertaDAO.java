@@ -13,7 +13,10 @@ public final class OfertaDAO {
     public record Franja(int id, int docenteId, LocalDate fecha, LocalTime desde, LocalTime hasta) { }
     public record Horario(LocalDate fecha, LocalTime inicio) { }
     private final Connection conn;
-    public OfertaDAO(Connection conn) { this.conn = conn; }
+    private final Clock clock;
+    public OfertaDAO(Connection conn) { this(conn,Clock.system(ReglasTutoria.ZONA)); }
+    public OfertaDAO(Connection conn,Clock clock) { this.conn = conn;this.clock=clock; }
+    private LocalDateTime ahora() { return LocalDateTime.ofInstant(clock.instant(),ReglasTutoria.ZONA); }
 
     public List<Curso> cursos(boolean soloActivos) {
         List<Curso> rows = new ArrayList<>();
@@ -80,7 +83,7 @@ public final class OfertaDAO {
     public List<Franja> franjas(int docenteId) {
         List<Franja> rows = new ArrayList<>();
         try (PreparedStatement s = conn.prepareStatement("select * from disponibilidad where docente_id=? and activa=true and fecha>=? order by fecha,hora_desde")) {
-            s.setInt(1, docenteId); s.setDate(2, java.sql.Date.valueOf(LocalDate.now(ReglasTutoria.ZONA)));
+            s.setInt(1, docenteId); s.setDate(2, java.sql.Date.valueOf(ahora().toLocalDate()));
             try (ResultSet r = s.executeQuery()) { while (r.next()) rows.add(new Franja(r.getInt("id"), docenteId, r.getDate("fecha").toLocalDate(), r.getTime("hora_desde").toLocalTime(), r.getTime("hora_hasta").toLocalTime())); }
             return rows;
         } catch (SQLException e) { throw failure(e); }
@@ -89,7 +92,7 @@ public final class OfertaDAO {
         LocalDate day; LocalTime a, b;
         try { day = LocalDate.parse(fecha); a = LocalTime.parse(desde); b = LocalTime.parse(hasta); }
         catch (RuntimeException e) { throw new IllegalArgumentException("Indica una fecha y horas válidas."); }
-        if (!day.atTime(a).isAfter(ReglasTutoria.ahora()) || !a.isBefore(b) || Duration.between(a,b).toMinutes() < 15
+        if (!day.atTime(a).isAfter(ahora()) || !a.isBefore(b) || Duration.between(a,b).toMinutes() < 15
                 || a.getSecond()!=0 || b.getSecond()!=0 || a.getNano()!=0 || b.getNano()!=0) throw new IllegalArgumentException("La franja debe ser futura, durar al menos 15 minutos y terminar el mismo día.");
         transaction(() -> {
             lockDocente(docenteId);
@@ -105,12 +108,12 @@ public final class OfertaDAO {
     public List<Horario> horarios(int docenteId, int minutos, int alumnoId) {
         if(minutos<15||minutos>180)throw new IllegalArgumentException("La duración debe ser de 15 a 180 minutos.");
         List<LocalDateTime[]> ocupados=new ArrayList<>();
-        for(var reserva:new TutoriaDAO(conn).reservasActivas(docenteId,alumnoId)) {
+        for(var reserva:new TutoriaDAO(conn,clock).reservasActivas(docenteId,alumnoId)) {
             LocalDateTime a=ReglasTutoria.inicio(reserva);if(a!=null)ocupados.add(new LocalDateTime[]{a,a.plusMinutes(reserva.getDuracionMinutos())});
         }
-        List<Horario> result=new ArrayList<>();LocalDateTime ahora=ReglasTutoria.ahora();
+        List<Horario> result=new ArrayList<>();LocalDateTime ahora=ahora();
         var plazos=new ConfiguracionReservasDAO(conn).obtener();if(!plazos.completa()||!new ConfiguracionPagosDAO(conn).obtener().completa())return result;
-        LocalDateTime minimo=ahora.plusMinutes(plazos.antelacion());
+        LocalDateTime minimo=plazos.minimo(ahora);
         for(Franja f:franjas(docenteId)) {
             for(LocalDateTime a=f.fecha().atTime(f.desde());!a.plusMinutes(minutos).isAfter(f.fecha().atTime(f.hasta()));a=a.plusMinutes(minutos)) {
                 if(a.isBefore(minimo))continue;LocalDateTime b=a.plusMinutes(minutos);boolean libre=true;

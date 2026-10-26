@@ -2,6 +2,7 @@ services:
   - type: web
     name: teachmate
     runtime: docker
+    # Free suspende el servicio sin trafico; para tareas continuas usar una instancia activa.
     plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .

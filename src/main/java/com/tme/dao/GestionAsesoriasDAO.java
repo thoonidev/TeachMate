@@ -22,6 +22,11 @@ public final class GestionAsesoriasDAO {
         Tutoria t=base.getTutoriaById(id);
         if(t==null||!base.esPropietario(t,actor,rol))return null;
         expirarUna(t);
+        expirarCambio(t);
+        return base.getTutoriaById(id);
+    }
+    private void expirarCambio(Tutoria t) {
+        int id=t.getId();
         Cambio cambio=cambio(id);
         if(cambio!=null&&cambio.estado().equals("Vencida"))base.transaction(()->{
             bloquear(t);
@@ -31,7 +36,6 @@ public final class GestionAsesoriasDAO {
             }
             return true;
         });
-        return base.getTutoriaById(id);
     }
     public void expirar() {
         List<Integer> ids=new ArrayList<>();
@@ -40,6 +44,12 @@ public final class GestionAsesoriasDAO {
             try(ResultSet r=s.executeQuery()){while(r.next())ids.add(r.getInt(1));}
         }catch(SQLException e){throw failure(e);}
         for(int id:ids){Tutoria t=base.getTutoriaById(id);if(t!=null)expirarUna(t);}
+        ids.clear();
+        try(PreparedStatement s=conn.prepareStatement("select tutoria_id from tutoria_cambio where estado='Pendiente' and vence_en<=? order by vence_en,tutoria_id limit 1000")) {
+            s.setObject(1,base.ahora());
+            try(ResultSet r=s.executeQuery()){while(r.next())ids.add(r.getInt(1));}
+        }catch(SQLException e){throw failure(e);}
+        for(int id:ids){Tutoria t=base.getTutoriaById(id);if(t!=null)expirarCambio(t);}
     }
     private void expirarUna(Tutoria initial) {
         if(!pendiente(initial)||ReglasTutoria.vigente(initial,base.ahora()))return;

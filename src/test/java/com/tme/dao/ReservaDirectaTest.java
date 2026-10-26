@@ -34,7 +34,7 @@ public class ReservaDirectaTest {
         ejecutar("insert into docente_curso values(1,1)");
         ejecutar("insert into tarifa_curso(curso_id,duracion_minutos,precio,porcentaje_docente) values(1,60,50,80)");
         ejecutar("insert into disponibilidad(docente_id,fecha,hora_desde,hora_hasta,creado_por) values(1,'2030-01-08','09:00','18:00','DOCENTE')");
-        new ConfiguracionReservasDAO(conn).guardar(120,1440);
+        new ConfiguracionReservasDAO(conn).guardar(120,1440,63,LocalTime.of(9,0),LocalTime.of(18,0),120);
         new ConfiguracionPagosDAO(conn).guardar("Banco", "Equipo", "Cuenta de prueba", "Adjuntar comprobante", 60);
     }
     @After public void cerrar() throws Exception { if (conn != null) conn.close(); }
@@ -75,9 +75,9 @@ public class ReservaDirectaTest {
     }
     @Test public void configuracionNoPermiteMenosDe24HorasNiPagoMayorQueAnticipacion() {
         ConfiguracionReservasDAO c=new ConfiguracionReservasDAO(conn);
-        assertThrows(IllegalArgumentException.class,()->c.guardar(60,1439));
-        assertThrows(IllegalArgumentException.class,()->c.guardar(1500,1440));
-        assertThrows(IllegalArgumentException.class,()->c.guardar(0,1440));
+        assertThrows(IllegalArgumentException.class,()->c.guardar(60,1439,63,LocalTime.of(9,0),LocalTime.of(18,0),120));
+        assertThrows(IllegalArgumentException.class,()->c.guardar(1500,1440,63,LocalTime.of(9,0),LocalTime.of(18,0),120));
+        assertThrows(IllegalArgumentException.class,()->c.guardar(0,1440,63,LocalTime.of(9,0),LocalTime.of(18,0),120));
     }
     @Test public void requiereConfiguracionDeCobro() throws Exception {
         ejecutar("update configuracion_pagos set destino=null");
@@ -107,5 +107,92 @@ public class ReservaDirectaTest {
         ejecutar("update disponibilidad set activa=false");
         assertEquals("Pendiente de pago",reservas.getTutoriaById(t.getId()).getEstado());
         assertThrows(IllegalArgumentException.class,()->reservas.addTutoria(nueva(2,12)));
+    }
+    @Test public void finDeSemanaSoloOfreceClasesConRevisionSuficiente() throws Exception {
+        LocalDateTime sabado=LocalDateTime.of(2030,1,12,23,0);
+        TutoriaDAO finDeSemana=new TutoriaDAO(conn,Clock.fixed(sabado.atZone(ReglasTutoria.ZONA).toInstant(),ReglasTutoria.ZONA));
+        ejecutar("insert into disponibilidad(docente_id,fecha,hora_desde,hora_hasta,creado_por) values(1,'2030-01-14','09:00','18:00','DOCENTE')");
+        Clock relojSabado=Clock.fixed(sabado.atZone(ReglasTutoria.ZONA).toInstant(),ReglasTutoria.ZONA);
+        var ofrecidos=new OfertaDAO(conn,relojSabado).horarios(1,60,1);
+        assertFalse(ofrecidos.isEmpty());
+        assertEquals(LocalTime.of(11,0),ofrecidos.get(0).inicio());
+        assertEquals(LocalDate.of(2030,1,14),ofrecidos.get(0).fecha());
+        Tutoria t=nueva(1,10);t.setFtutoria("2030-01-14");
+        assertThrows(IllegalArgumentException.class,()->finDeSemana.addTutoria(t));
+        t.setHoraInicio(LocalTime.of(11,0));assertTrue(finDeSemana.addTutoria(t));
+        Tutoria guardada=finDeSemana.getTutoriaById(t.getId());
+        assertEquals(LocalDateTime.of(2030,1,13,1,0),guardada.getVencePago());
+        assertEquals(LocalDateTime.of(2030,1,14,11,0),guardada.getRevisionPrevista());
+    }
+    @Test public void cambiosDeConfiguracionNoReescribenReservas() {
+        Tutoria t=nueva(1,10);assertTrue(reservas.addTutoria(t));
+        LocalDateTime prevista=reservas.getTutoriaById(t.getId()).getRevisionPrevista();
+        new ConfiguracionReservasDAO(conn).guardar(60,2880,64,LocalTime.of(10,0),LocalTime.of(12,0),180);
+        Tutoria anterior=reservas.getTutoriaById(t.getId());
+        assertEquals(63,anterior.getCalendarioRevision().dias());
+        assertEquals(120,anterior.getCalendarioRevision().revisionMinutos());
+        assertEquals(prevista,anterior.getRevisionPrevista());
+        assertEquals(ahora.plusMinutes(120),anterior.getVencePago());
+    }
+    @Test public void corregirConservaMargenAntesDeClase() {
+        new ConfiguracionPagosDAO(conn).guardar("Banco","Equipo","Cuenta","Adjuntar",10080);
+        Tutoria t=nueva(1,10);assertTrue(reservas.addTutoria(t));
+        PagosDAO pagos=new PagosDAO(conn,clock);
+        assertTrue(pagos.registrar(t.getId(),1,Rol.ALUMNO,0,"50.00","PRUEBA-02",ahora,
+            "%PDF-1.4 prueba".getBytes(StandardCharsets.US_ASCII),false,""));
+        Clock tarde=Clock.offset(clock,Duration.ofHours(6));
+        assertTrue(new PagosDAO(conn,tarde).gestionar(t.getId(),0,Rol.ADMIN,1,"observar","Corregir referencia","","",null,0));
+        Tutoria observada=reservas.getTutoriaById(t.getId());
+        assertEquals(ahora.withHour(17),observada.getVencePago());
+        assertEquals(LocalDateTime.of(2030,1,8,10,0),observada.getRevisionPrevista());
+        assertEquals(observada.getVencePago(),pagos.obtener(t.getId()).corregir());
+    }
+    @Test public void noPermiteCorreccionSinMargenDisponible() {
+        Tutoria t=nueva(1,10);assertTrue(reservas.addTutoria(t));
+        PagosDAO pagos=new PagosDAO(conn,clock);
+        assertTrue(pagos.registrar(t.getId(),1,Rol.ALUMNO,0,"50.00","PRUEBA-03",ahora,
+            "%PDF-1.4 prueba".getBytes(StandardCharsets.US_ASCII),false,""));
+        Clock tarde=Clock.offset(clock,Duration.ofHours(7));
+        assertThrows(IllegalArgumentException.class,()->new PagosDAO(conn,tarde)
+            .gestionar(t.getId(),0,Rol.ADMIN,1,"observar","Falta referencia","","",null,0));
+        assertEquals("En revisión",pagos.obtener(t.getId()).estado());
+    }
+    @Test public void vencimientoDeComprobanteEnRevisionGeneraIncidenciaUnaSolaVez() throws Exception {
+        Tutoria t=nueva(1,10);assertTrue(reservas.addTutoria(t));
+        assertTrue(new PagosDAO(conn,clock).registrar(t.getId(),1,Rol.ALUMNO,0,"50.00","PRUEBA-04",ahora,
+            "%PDF-1.4 prueba".getBytes(StandardCharsets.US_ASCII),false,""));
+        GestionAsesoriasDAO vencimientos=new GestionAsesoriasDAO(conn,Clock.offset(clock,Duration.ofDays(1)));
+        vencimientos.expirar();vencimientos.expirar();
+        assertEquals("Incidencia",reservas.getTutoriaById(t.getId()).getEstado());
+        try(Statement s=conn.createStatement();ResultSet r=s.executeQuery("select count(*) from tutoria_evento where accion='Vencimiento'")){
+            assertTrue(r.next());assertEquals(1,r.getInt(1));
+        }
+    }
+    @Test public void procesoPeriodicoVencePropuestasSinAbrirElDetalle() throws Exception {
+        Tutoria t=nueva(1,10);assertTrue(reservas.addTutoria(t));
+        ejecutar("update tutoria set estado='Confirmada' where id="+t.getId());
+        ejecutar("insert into tutoria_cambio(tutoria_id,version,fecha,hora,motivo,estado,vence_en) values("+t.getId()+",1,'2030-01-09','10:00','Prueba','Pendiente','2030-01-07 11:00:00')");
+        GestionAsesoriasDAO vencimientos=new GestionAsesoriasDAO(conn,Clock.offset(clock,Duration.ofHours(2)));
+        vencimientos.expirar();vencimientos.expirar();
+        assertEquals("Vencida",vencimientos.cambio(t.getId()).estado());
+        assertEquals("2030-01-08",reservas.getTutoriaById(t.getId()).getFtutoria());
+        try(Statement s=conn.createStatement();ResultSet r=s.executeQuery("select count(*) from tutoria_evento where accion='Propuesta vencida'")){
+            assertTrue(r.next());assertEquals(1,r.getInt(1));
+        }
+    }
+    // H2 lacks MySQL's two-argument TIMESTAMP function used by the existing panel query.
+    public static Timestamp mysqlTimestamp(String fecha,Time hora) {
+        if(fecha==null||hora==null)return null;
+        try { return Timestamp.valueOf(LocalDate.parse(fecha).atTime(hora.toLocalTime())); }
+        catch(DateTimeException e){return null;}
+    }
+    @Test public void panelDePagosMuestraLaFechaDeRevisionYRespetaPropiedad() throws Exception {
+        ejecutar("CREATE ALIAS timestamp FOR 'com.tme.dao.ReservaDirectaTest.mysqlTimestamp'");
+        Tutoria t=nueva(1,10);assertTrue(reservas.addTutoria(t));
+        PagosDAO pagos=new PagosDAO(conn,clock);
+        var propios=pagos.listar(1,Rol.ALUMNO,"Todos",1);
+        assertEquals(1,propios.total());
+        assertEquals(ahora.plusHours(4),propios.filas().get(0).revision());
+        assertEquals(0,pagos.listar(2,Rol.ALUMNO,"Todos",1).total());
     }
 }

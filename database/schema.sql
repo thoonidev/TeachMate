@@ -118,6 +118,11 @@ CREATE TABLE `tutoria` (
   cobro_destino VARCHAR(200) NULL,
   cobro_instrucciones VARCHAR(1000) NULL,
   plazo_correccion_minutos INT NULL,
+  revision_dias INT NULL,
+  revision_desde TIME NULL,
+  revision_hasta TIME NULL,
+  revision_minutos INT NULL,
+  revision_prevista DATETIME NULL,
   INDEX idx_tutoria_vencimiento (estado,vence_respuesta,vence_pago),
   PRIMARY KEY (`id`),
   INDEX `uid_idx` (`userId` ASC),
@@ -138,6 +143,14 @@ CREATE TABLE configuracion_reservas (
     respuesta_minutos INT NULL, -- Compatibilidad: 0 para reservas directas, sin respuesta del profesor.
     pago_minutos INT NULL,
     antelacion_minutos INT NULL,
+    atencion_dias INT NOT NULL DEFAULT 63,
+    atencion_desde TIME NOT NULL DEFAULT '09:00:00',
+    atencion_hasta TIME NOT NULL DEFAULT '18:00:00',
+    revision_minutos INT NOT NULL DEFAULT 120,
+    CONSTRAINT ck_atencion_reservas CHECK(atencion_dias BETWEEN 1 AND 127
+        AND atencion_desde>='00:00:00' AND atencion_hasta<='23:59:00'
+        AND atencion_desde<atencion_hasta
+        AND revision_minutos BETWEEN 15 AND 10080),
     CONSTRAINT ck_configuracion_unica CHECK(id=1),
     CONSTRAINT ck_configuracion_plazos CHECK(
         (respuesta_minutos IS NULL AND pago_minutos IS NULL AND antelacion_minutos IS NULL) OR
@@ -166,6 +179,7 @@ CREATE TABLE tutoria_cambio (
     acepta_alumno BOOLEAN NOT NULL DEFAULT FALSE,
     acepta_docente BOOLEAN NOT NULL DEFAULT FALSE,
     vence_en DATETIME NOT NULL,
+    INDEX idx_cambio_vencimiento(estado,vence_en),
     FOREIGN KEY(tutoria_id) REFERENCES tutoria(id),
     CONSTRAINT ck_cambio_estado CHECK(estado IN ('Pendiente','Aceptada','Rechazada','Vencida','Anulada'))
 );

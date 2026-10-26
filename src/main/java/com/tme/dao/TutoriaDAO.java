@@ -63,6 +63,11 @@ public class TutoriaDAO {
                 if(statement.executeUpdate()!=1)return false;
                 try(ResultSet keys=statement.getGeneratedKeys()){if(!keys.next())throw new SQLException("No se obtuvo el identificador de la asesoría.");tutoria.setId(keys.getInt(1));}
                 new ConfiguracionPagosDAO(conn).copiar(tutoria.getId());
+                try(PreparedStatement revision=conn.prepareStatement("update tutoria set revision_dias=?,revision_desde=?,revision_hasta=?,revision_minutos=?,revision_prevista=? where id=?")) {
+                    revision.setInt(1,plazos.dias());revision.setObject(2,plazos.desde());revision.setObject(3,plazos.hasta());
+                    revision.setInt(4,plazos.revision());revision.setObject(5,plazos.calendario().sumarRevision(vencePago));
+                    revision.setInt(6,tutoria.getId());revision.executeUpdate();
+                }
                 GestionAsesoriasDAO.evento(conn,tutoria.getId(),"ALUMNO",tutoria.getUserId(),"Reserva","Horario publicado reservado. Comprobante de pago hasta "+vencePago+" (Lima). La confirmación requiere validación administrativa del ingreso.",instante);
                 return true;
             }
@@ -276,6 +281,10 @@ public class TutoriaDAO {
         tutoria.setCreadaEn(fechaHora(result,"creada_en"));
         tutoria.setVenceRespuesta(fechaHora(result,"vence_respuesta"));
         tutoria.setVencePago(fechaHora(result,"vence_pago"));
+        tutoria.setRevisionPrevista(fechaHora(result,"revision_prevista"));
+        Integer revisionDias=(Integer)result.getObject("revision_dias");
+        if(revisionDias!=null)tutoria.setCalendarioRevision(new com.tme.service.CalendarioAtencion(revisionDias,
+            result.getObject("revision_desde",java.time.LocalTime.class),result.getObject("revision_hasta",java.time.LocalTime.class),result.getInt("revision_minutos")));
         int plazo=result.getInt("plazo_pago_minutos");tutoria.setPlazoPagoMinutos(result.wasNull()?null:plazo);
         return tutoria;
     }
